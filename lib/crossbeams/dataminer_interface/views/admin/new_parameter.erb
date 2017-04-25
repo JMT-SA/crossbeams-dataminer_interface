@@ -1,0 +1,52 @@
+<h1>Add a query parameter definition</h1>
+<p>
+  column: choose from list of namespaced columns - or - enter something else (like id...) [must choose a table alias]
+</p>
+
+<form action='/<%= the_url_prefix %>admin/create_parameter_def/<%= params[:id]%>' method=post class="pure-form pure-form-aligned">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-2-3">
+      <div class="field pure-control-group">
+        <label for="ns_col">Namespaced column</label>
+        <select id="ns_col" name="column">
+          <%= select_options(nil, @cols) %>
+        </select>
+      </div>
+      <div class="field pure-control-group">
+        <label for="non_sel_col">Non-select column</label>
+        <select id="non_sel_col" name="table">
+          <%= select_options(nil, @tables) %>
+        </select>
+        .
+        <input type="text" name="field" placeholder='Field name' ></input>
+      </div>
+      <div class="field pure-control-group">
+        <label for="caption">Caption</label>
+        <input type='text' id="caption" name='caption' placeholder='Caption' required size="80"/>
+      </div>
+      <div class="field pure-control-group">
+        <label for="data_type">Data type</label>
+        <select id="data_type" name="data_type">
+          <%= select_options(nil, [['String', 'string'], ['Integer', 'integer'], ['Number', 'number'], ['Date', 'date'], ['Date-Time', 'datetime']], false) %>
+        </select>
+      </div>
+      <div class="field pure-control-group">
+        <label for="control_type">Control type</label>
+        <select name="control_type">
+          <%= select_options(nil, [['Text box', 'text'], ['Dropdown list', 'list'], ['Date range', 'daterange']], false) %>
+        </select>
+      </div>
+      <div class="field pure-control-group">
+        <label for="list_def">List definition</label>
+        <input type='text' id="list_def" name='list_def' placeholder='List definition' size="80"/>
+      </div>
+      <div class="field pure-control-group">
+        <label for="default_value">Default value</label>
+        <input type='text' id="default_value" name='default_value' placeholder='Default value' />
+      </div>
+      <div class="actions pure-controls">
+        <input type="submit" class="pure-button pure-button-primary" value="Add parameter" />
+      </div>
+    </div>
+  </div>
+</form>

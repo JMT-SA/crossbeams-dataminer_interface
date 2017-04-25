@@ -1,0 +1,44 @@
+<h1>Fill in parameters</h1>
+<%= @menu %>
+<h2><%= @rpt.caption %></h2>
+
+<form action='<%= @report_action %>' id="rp_form" method=post class="pure-form pure-form-aligned" onsubmit="crossbeamsDataMinerParams.storeCurrentParams('<%=@rpt_id%>'); crossbeamsUtils.addJSONVarToForm('rp_form', crossbeamsDataMinerParams.current_values);">
+  <div class="pure-g">
+    <div class="pure-u-1">
+      <div class="field pure-control-group">
+        <a href="#" id="reloadParams" style="display:none" onclick="crossbeamsDataMinerParams.loadCurrentParams()">get previous parameters</a>
+      </div>
+      <div class="field pure-control-group">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" name='limit' min="1" value="<%= @rpt.limit %>" />
+      </div>
+      <div class="field pure-control-group">
+        <label for="offset">Start from (offset)</label>
+        <input id="offset" type="number" name='offset' min="1" value="<%= @rpt.offset %>" />
+      </div>
+
+      <h3>Choose parameters</h3>
+      <select id="select_param">
+        <option value="">Select a parameter to apply</option>
+        <%= make_options(@qps.map { |qp| [qp.caption, qp.column] }) %>
+      </select>
+      <div id="qp_form" style="display:inline-block"></div>
+      <div id="param_display"></div>
+
+      <div class="actions pure-controls">
+        <input type="submit" name="btnSubmit" value="Run report" data-disable-with="Run report" class="pure-button pure-button-primary">
+        <button type='submit' id="run_excel" name="btnSubmit" formaction="<%= @excel_action %>" data-disable-with="Create Excel report" class="pure-button pure-button"><i class="fa fa-file-excel-o"></i> Download Excel report</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+  crossbeamsDataMinerParams.init('rp_form', '<%=@rpt_id%>', <%= make_query_param_json(@qps) %>);
+  <% if @load_params %>
+    crossbeamsDataMinerParams.loadCurrentParams();
+  <% else %>
+    crossbeamsDataMinerParams.buildReloadButton();
+  <% end %>
+</script>
+

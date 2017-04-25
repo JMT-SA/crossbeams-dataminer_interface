@@ -1,0 +1,244 @@
+<h1>Edit report</h1>
+<%= menu(with_admin: true) %>
+
+<h2>Report: <%= @rpt.caption %></h2>
+<fieldset>
+<legend>Header</legend>
+<form action='/<%= the_url_prefix %>admin/save_rpt_header/<%= params[:id]%>' method=post class="pure-form pure-form-aligned">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-2-3">
+      <div class="field pure-control-group">
+        <label for="filename">File name</label>
+        <input type='text' id="filename" name='filename' placeholder='filename.yml' value='<%= @filename %>' required readonly="readonly" />
+      </div>
+      <div class="field pure-control-group">
+        <label for="caption">Caption</label>
+        <input type='text' id="caption" name='caption' placeholder='Caption' value='<%= @rpt.caption %>' required size="80"/>
+      </div>
+      <div class="field pure-control-group">
+        <label for="limit">Limit</label>
+        <input type='number' id="limit" name='limit' placeholder='Limit' value='<%= @rpt.limit %>' size="80"/>
+      </div>
+      <div class="field pure-control-group">
+        <label for="offset">Offset</label>
+        <input type='number' id="offset" name='offset' placeholder='Offset' value='<%= @rpt.offset %>' size="80"/>
+      </div>
+      <div class="actions pure-controls">
+        <input type="submit" class="pure-button pure-button-primary" value="Update report header" />
+      </div>
+    </div>
+  </div>
+
+</form>
+</fieldset>
+<hr>
+<button onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false" class="pure-button"><i class="fa fa-info"></i> Toggle SQL view</button>
+<button disabled class="pure-button" >Change SQL</button>
+<pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
+<hr>
+
+<div style="height:20em">
+  <div class="grid-head">
+    <label style="margin-left: 20px;">
+      <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('grd1', '<%= @rpt.caption.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') %> columns.csv')"><i class="fa fa-file"></i> Export to CSV</button>
+    </label>
+    <label style="margin-left: 20px;">
+      <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('grd1')"><i class="fa fa-cog"></i> Tool panel</button>
+    </label>
+    <label style="margin-left: 20px;">
+      <input onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="grd1"/>
+    </label>
+    <span class="grid-caption">
+      Columns
+    </span>
+  </div>
+  <div id="grd1" style="height: 100%;" class="ag-blue"></div>
+</div>
+
+<p style="margin-top:5em;"><a href='/<%= the_url_prefix %>admin/new_parameter/<%= params[:id] %>' class="pure-button"><i class="fa fa-plus"></i> Add a parameter</a><p>
+<div style="height:20em">
+  <div class="grid-head">
+    <label style="margin-left: 20px;">
+      <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('grd2', '<%= @rpt.caption.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') %> parameters.csv')"><i class="fa fa-file"></i> Export to CSV</button>
+    </label>
+    <label style="margin-left: 20px;">
+      <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('grd2')"><i class="fa fa-cog"></i> Tool panel</button>
+    </label>
+    <label style="margin-left: 20px;">
+      <input onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="grd2"/>
+    </label>
+    <span class="grid-caption">
+      Parameters
+    </span>
+  </div>
+  <div id="grd2" style="height: 100%;" class="ag-blue"></div>
+</div>
+
+
+<script>
+
+(function() {
+  //var loadGrid;
+  var onBtExport;
+
+  translateColDefs = function(columnDefs) {
+    //console.log(columnDefs);
+    var newColDefs = [], col, newCol, fn;
+    for (_i = 0, _len = columnDefs.length; _i < _len; _i++) {
+      col = columnDefs[_i];
+      newCol = {};
+      for(attr in col) {
+        if(attr==='cellRenderer') {
+          //fn = window[col[attr]];
+          //newCol[attr] = fn;
+          //newCol[attr] = eval(col[attr]);
+          if(col[attr] ==='crossbeamsGridFormatters.testRender') {
+            newCol[attr] = crossbeamsGridFormatters.testRender;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.numberWithCommas2') {
+            newCol[attr] = crossbeamsGridFormatters.numberWithCommas2;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.numberWithCommas4') {
+            newCol[attr] = crossbeamsGridFormatters.numberWithCommas4;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.booleanFormatter') {
+            newCol[attr] = crossbeamsGridFormatters.booleanFormatter;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.hrefInlineFormatter') {
+            newCol[attr] = crossbeamsGridFormatters.hrefInlineFormatter;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.hrefSimpleFormatter') {
+            newCol[attr] = crossbeamsGridFormatters.hrefSimpleFormatter;
+          }
+          if(col[attr] ==='crossbeamsGridFormatters.hrefPromptFormatter') {
+            newCol[attr] = crossbeamsGridFormatters.hrefPromptFormatter;
+          }
+
+        }
+        else {
+          if(attr==='cellEditor') {
+            if(col[attr] ==='NumericCellEditor') {
+              newCol[attr] = NumericCellEditor;
+            }
+            else {
+              newCol[attr] = col[attr];
+            }
+          }
+          else {
+            newCol[attr] = col[attr];
+          }
+        }
+      }
+      newColDefs.push(newCol);
+    }
+    return newColDefs;
+  };
+
+
+      var grid, gridOptions, grid_id, colDefs, rowDefs;
+      colDefs = translateColDefs(<%= @col_defs.to_json %>),
+      rowDefs = <%= @row_defs.to_json %>,
+      grid = document.querySelector('#grd1');
+      grid_id = grid.getAttribute('id');
+      //for_print = grid.dataset.gridPrint;
+      gridOptions = {
+        columnDefs: colDefs,
+        rowData: rowDefs,
+        context: {
+          saveUrl: '<%= @save_url %>',
+          keyColumn: 'name'
+              },
+                enableColResize: true,
+                enableSorting: true,
+                enableFilter: true,
+                suppressScrollLag: true,
+                enableRangeSelection: true,
+                enableStatusBar: true,
+                suppressAggFuncInHeader: true,
+        toolPanelSuppressPivotMode: true,
+        onCellValueChanged: function(event) {
+          if(event.oldValue === event.newValue) {
+            console.log('NOCHANGE!');
+          }
+          else {
+            console.log('Old value: ', event.oldValue, 'New value: ', event.newValue);
+            var http     = new XMLHttpRequest();
+            var url      = event.context.saveUrl;
+            var formData = new FormData();
+            formData.append('key_name', event.context.keyColumn);
+            formData.append('key_val', event.data[event.context.keyColumn]);
+            formData.append('col_name', event.colDef.field);
+            formData.append('col_val', event.newValue);
+
+            http.responseType = 'json'
+            http.open("POST", url, true);
+
+            http.onreadystatechange = function() {//Call a function when the state changes.
+              if(http.readyState == 4 && http.status == 200) {
+                var resp = http.response;
+                switch(resp.status) {
+                  case 'ok':
+                    console.log(resp.message);
+                    if(resp.changedFields !== undefined) {
+                      console.log('got changes: ', resp.changedFields);
+                      for(cattr in resp.changedFields) {
+                        event.node.setDataValue(cattr, resp.changedFields.cattr); // This also kicks off edit change...
+                      }
+                      Jackbox.information('Other columns were changed as a result of this change.');
+                    }
+                    // TODO apply extra column changes if any...
+                    break;
+                  case 'info':
+                    console.log('info: ', resp.message);
+                    Jackbox.information(resp.message);
+                    break;
+                  case 'warn':
+                    // TODO: Can we change this so the edit call doesn't happen again...
+                    event.node.setDataValue(event.colDef.field, event.oldValue);
+                    console.log('warning: ', resp.message);
+                    Jackbox.warning(resp.message);
+                    break;
+                  case 'error':
+                    // TODO: Can we change this so the edit call doesn't happen again...
+                    event.node.setDataValue(event.colDef.field, event.oldValue);
+                    console.log('error: ', resp.message);
+                    Jackbox.error(resp.message);
+                    break;
+                  case 'success':
+                    console.log('success: ', resp.message);
+                    Jackbox.success(resp.message);
+                }
+              }
+            }
+            http.send(formData);
+          }
+        },
+              };
+
+      new agGrid.Grid(grid, gridOptions);
+      crossbeamsGridStore.addGrid(grid_id, gridOptions);
+
+      colDefs = translateColDefs(<%= @col_defs_params.to_json %>),
+      rowDefs = <%= @row_defs_params.to_json %>,
+      grid = document.querySelector('#grd2');
+      grid_id = grid.getAttribute('id');
+      //for_print = grid.dataset.gridPrint;
+      gridOptions = {
+        columnDefs: colDefs,
+        rowData: rowDefs,
+                enableColResize: true,
+                enableSorting: true,
+                enableFilter: true,
+                suppressScrollLag: true,
+                enableRangeSelection: true,
+                enableStatusBar: true,
+        suppressAggFuncInHeader: true,
+        toolPanelSuppressPivotMode: true
+              };
+
+      new agGrid.Grid(grid, gridOptions);
+      crossbeamsGridStore.addGrid(grid_id, gridOptions);
+
+      //loadGrid(grid, gridOptions);
+  }).call(this);
+</script>
