@@ -11,16 +11,83 @@ module Crossbeams
 # dm_js_location, dm_css_location
 # dm_js_location: javascripts
 # dm_css_location: stylesheets
-
       end
 
-      # TODO: Need to see how this should be done when running under passenger/thin/puma...
-      # Crossbeams::DataminerInterface::DB = Sequel.postgres(settings.database['name'], user: settings.database['user'], password: settings.database['password'], host: settings.database['host'] || 'localhost')
-      Crossbeams::DataminerInterface::DB = Sequel.postgres('kromco', user: 'postgres', password: 'postgres', host: 'localhost')
+      def db_connection
+        settings.db_connection
+      end
 
       def lookup_report(id)
         Crossbeams::DataminerInterface::DmReportLister.new(settings.dm_reports_location).get_report_by_id(id)
       end
+
+    def clean_where(sql)
+      rems = sql.scan( /\{(.+?)\}/).flatten.map {|s| "#{s}={#{s}}" }
+      rems.each {|r| sql.gsub!(%r|and\s+#{r}|i,'') }
+        rems.each {|r| sql.gsub!(r,'') }
+      sql.sub!(/where\s*\(\s+\)/i, '')
+      sql
+    end
+
+    def sql_to_highlight(sql)
+      # wrap sql @ 120
+      width = 120
+      ar = sql.gsub(/from /i, "\nFROM ").gsub(/where /i, "\nWHERE ").gsub(/(left outer join |left join |inner join |join )/i, "\n\\1").split("\n")
+      wrapped_sql = ar.map {|a| a.scan(/\S.{0,#{width-2}}\S(?=\s|$)|\S+/).join("\n") }.join("\n")
+
+      theme = Rouge::Themes::Github.new
+      formatter = Rouge::Formatters::HTMLInline.new(theme)
+      lexer  = Rouge::Lexers::SQL.new
+      formatter.format(lexer.lex(wrapped_sql))
+    end
+
+    def yml_to_highlight(yml)
+      theme = Rouge::Themes::Github.new
+      formatter = Rouge::Formatters::HTMLInline.new(theme)
+      lexer  = Rouge::Lexers::YAML.new
+      formatter.format(lexer.lex(yml))
+    end
+
+    def setup_report_with_parameters(rpt, params)
+      #{"col"=>"users.department_id", "op"=>"=", "opText"=>"is", "val"=>"17", "text"=>"Finance", "caption"=>"Department"}
+      input_parameters = ::JSON.parse(params[:json_var])
+      # logger.info input_parameters.inspect
+      parms = []
+      # Check if this should become an IN parmeter (list of equal checks for a column.
+      eq_sel = input_parameters.select { |p| p['op'] == '=' }.group_by { |p| p['col'] }
+      in_sets = {}
+      in_keys = []
+      eq_sel.each do |col, qp|
+        in_keys << col if qp.length > 1
+      end
+
+      input_parameters.each do |in_param|
+        col = in_param['col']
+        if in_keys.include?(col)
+          in_sets[col] ||= []
+          in_sets[col] << in_param['val']
+          next
+        end
+        param_def = @rpt.parameter_definition(col)
+        if 'between' == in_param['op']
+          parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new(in_param['op'], [in_param['val'], in_param['val_to']], param_def.data_type))
+        else
+          parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new(in_param['op'], in_param['val'], param_def.data_type))
+        end
+      end
+      in_sets.each do |col, vals|
+        param_def = @rpt.parameter_definition(col)
+        parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new('in', vals, param_def.data_type))
+      end
+
+      rpt.limit  = params[:limit].to_i  if params[:limit] != ''
+      rpt.offset = params[:offset].to_i if params[:offset] != ''
+      begin
+        rpt.apply_params(parms)
+      rescue StandardError => e
+        return "ERROR: #{e.message}"
+      end
+    end
 
       def make_options(ar)
         ar.map do |a|
@@ -78,7 +145,7 @@ module Crossbeams
           if query_param.includes_list_options?
             hs[:list_values] = query_param.build_list.list_values
           else
-            hs[:list_values] = query_param.build_list {|sql| Crossbeams::DataminerInterface::DB[sql].all.map {|r| r.values } }.list_values
+            hs[:list_values] = query_param.build_list {|sql| db_connection[sql].all.map {|r| r.values } }.list_values
           end
         elsif query_param.control_type == :daterange
           hs[:operator] = date_ops + common_ops
@@ -128,7 +195,56 @@ module Crossbeams
               end
 
               r.post 'run' do
-                'I am running this report'
+                @rpt = lookup_report(id)
+                setup_report_with_parameters(@rpt, params)
+
+                @col_defs = []
+                @rpt.ordered_columns.each do | col|
+                  hs                  = {headerName: col.caption, field: col.name, hide: col.hide, headerTooltip: col.caption}
+                  hs[:width]          = col.width unless col.width.nil?
+                  hs[:enableValue]    = true if [:integer, :number].include?(col.data_type)
+                  hs[:enableRowGroup] = true unless hs[:enableValue] && !col.groupable
+                  hs[:enablePivot]    = true unless hs[:enableValue] && !col.groupable
+                  if [:integer, :number].include?(col.data_type)
+                    hs[:cellClass] = 'grid-number-column'
+                    hs[:width]     = 100 if col.width.nil? && col.data_type == :integer
+                    hs[:width]     = 120 if col.width.nil? && col.data_type == :number
+                  end
+                  if col.format == :delimited_1000
+                    hs[:cellRenderer] = 'crossbeamsGridFormatters.numberWithCommas2'
+                  end
+                  if col.format == :delimited_1000_4
+                    hs[:cellRenderer] = 'crossbeamsGridFormatters.numberWithCommas4'
+                  end
+                  if col.data_type == :boolean
+                    hs[:cellRenderer] = 'crossbeamsGridFormatters.booleanFormatter'
+                    hs[:cellClass]    = 'grid-boolean-column'
+                    hs[:width]        = 100 if col.width.nil?
+                  end
+
+                  # hs[:cellClassRules] = {"grid-row-red": "x === 'Fred'"} if col.name == 'author'
+
+                  @col_defs << hs
+                end
+
+                begin
+                  # Use module for BigDecimal change? - register_extension...?
+                  @row_defs = db_connection[@rpt.runnable_sql].to_a.map {|m| m.keys.each {|k| if m[k].is_a?(BigDecimal) then m[k] = m[k].to_f; end }; m; }
+
+                  @return_action = "/#{settings.url_prefix}report/#{id}"
+                  view('report/display')
+
+                rescue Sequel::DatabaseError => e
+                  render(inline: <<-EOS)
+                  <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
+                  <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
+                  <pre>#{e.message}</pre>
+                  <button class="pure-button" onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false">
+                    <i class="fa fa-info"></i> Toggle SQL
+                  </button>
+                  <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
+                  EOS
+                end
               end
             end
           end

@@ -61,7 +61,7 @@
     <br>(<%#= env.keys %>)
     <br>(<%#= env['rack.session'].inspect %>)
   <% else %>
-    NO WARDEN - HANAMI LOADED THIS APP BEFORE WARDEN...?
+    NO WARDEN
     <%#= Sinatra::Application.instance_variable_get("@middleware").inspect %>
   <% end %>
   <div id="content">

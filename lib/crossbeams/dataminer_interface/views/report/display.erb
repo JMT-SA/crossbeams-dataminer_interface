@@ -1,4 +1,4 @@
-<%= menu(return_to_report: true, return_action: @return_action) %>
+<%#= menu(return_to_report: true, return_action: @return_action) %>
 <button class="pure-button" onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false"><i class="fa fa-info"></i> Toggle SQL</button>
 <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre><hr>
 
