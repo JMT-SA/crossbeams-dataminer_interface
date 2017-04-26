@@ -55,6 +55,7 @@
   <% else %>
     <%= env['crossbeams.banner'] %>
   <% end %>
+  <%= partial('menu') %>
   <% if env['warden'] %>
     <%#= env['warden'] %>
     <br>(<%= env['warden'].user.nil? ? env['warden'].inspect : env['warden'].user.name %>)

@@ -160,6 +160,7 @@ module Crossbeams
     end
 
       plugin :render, views: File.join(File.dirname(__FILE__), 'views')
+      plugin :partials
       plugin :public
       plugin :view_subdirs
       plugin :content_for, :append=>true
@@ -173,9 +174,13 @@ module Crossbeams
             rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true)
 
             render(inline: <<-EOS)
-            <h1>Dataminer Reports</h1>
+            <% if env['crossbeams.banner'].nil? %>
+              <a href="/" style="font-size:1.8em;font-weight:bold;color:green;text-decoration:none;margin-left:1em;line-height:2.5em;">Data Miner</a>
+            <% else %>
+              <%= env['crossbeams.banner'] %>
+            <% end %>
+            <%= partial('menu') %>
             <ol><li>#{rpt_list.map { |l| "<a href='/#{settings.url_prefix}report/#{l[:id]}'>#{l[:caption]}</a>" }.join('</li><li>')}</li></ol>
-            <p><a href='/#{settings.url_prefix}admin'>Admin index</a></p>
             EOS
           end
 
