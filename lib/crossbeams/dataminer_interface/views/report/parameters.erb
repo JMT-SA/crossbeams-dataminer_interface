@@ -2,17 +2,17 @@
 <%= @menu %>
 <h2><%= @rpt.caption %></h2>
 
-<form action='<%= @report_action %>' id="rp_form" method=post class="pure-form pure-form-aligned" onsubmit="crossbeamsDataMinerParams.storeCurrentParams('<%=@rpt_id%>'); crossbeamsUtils.addJSONVarToForm('rp_form', crossbeamsDataMinerParams.current_values);">
-  <div class="pure-g">
-    <div class="pure-u-1">
-      <div class="field pure-control-group">
+<form action='<%= @report_action %>' id="rp_form" method=post class="crossbeams-form" onsubmit="crossbeamsDataMinerParams.storeCurrentParams('<%=@rpt_id%>'); crossbeamsUtils.addJSONVarToForm('rp_form', crossbeamsDataMinerParams.current_values);">
+  <div class="crossbeams-row">
+    <div class="crossbeams-col">
+      <div class="crossbeams-field">
         <a href="#" id="reloadParams" style="display:none" onclick="crossbeamsDataMinerParams.loadCurrentParams()">get previous parameters</a>
       </div>
-      <div class="field pure-control-group">
+      <div class="crossbeams-field">
         <label for="limit">Limit</label>
         <input id="limit" type="number" name='limit' min="1" value="<%= @rpt.limit %>" />
       </div>
-      <div class="field pure-control-group">
+      <div class="crossbeams-field">
         <label for="offset">Start from (offset)</label>
         <input id="offset" type="number" name='offset' min="1" value="<%= @rpt.offset %>" />
       </div>
@@ -25,9 +25,9 @@
       <div id="qp_form" style="display:inline-block"></div>
       <div id="param_display"></div>
 
-      <div class="actions pure-controls">
-        <input type="submit" name="btnSubmit" value="Run report" data-disable-with="Run report" class="pure-button pure-button-primary">
-        <button type='submit' id="run_excel" name="btnSubmit" formaction="<%= @excel_action %>" data-disable-with="Create Excel report" class="pure-button pure-button"><i class="fa fa-file-excel-o"></i> Download Excel report</button>
+      <div class="crossbeams-actions">
+        <input type="submit" name="btnSubmit" value="Run report" data-disable-with="Run report" class="white bg-green br2 dim pa3 ba b--near-white">
+        <button type='submit' id="run_excel" name="btnSubmit" formaction="<%= @excel_action %>" data-disable-with="Create Excel report" class="near-white bg-green br2 dim pa3 ml4 ba b--near-white"><i class="fa fa-file-excel-o"></i> Download Excel report</button>
       </div>
     </div>
   </div>
