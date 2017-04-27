@@ -173,13 +173,7 @@ module Crossbeams
           r.root do
             rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true)
 
-            render(inline: <<-EOS)
-            <% if env['crossbeams.banner'].nil? %>
-              <a href="/" style="font-size:1.8em;font-weight:bold;color:green;text-decoration:none;margin-left:1em;line-height:2.5em;">Data Miner</a>
-            <% else %>
-              <%= env['crossbeams.banner'] %>
-            <% end %>
-            <%= partial('menu') %>
+            view(inline: <<-EOS)
             <ol><li>#{rpt_list.map { |l| "<a href='/#{settings.url_prefix}report/#{l[:id]}'>#{l[:caption]}</a>" }.join('</li><li>')}</li></ol>
             EOS
           end
@@ -312,7 +306,7 @@ module Crossbeams
           end
 
           r.on 'admin' do
-            'Got to admin' # TODO: Load as multiroute
+            view(inline: 'Got to admin') # TODO: Load as multiroute
           end
         end
       end

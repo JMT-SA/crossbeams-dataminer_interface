@@ -55,7 +55,7 @@
     <%= env['crossbeams.banner'] %>
   <% end %>
   <%= partial('menu') %>
-  <% if env['warden'] %>
+<!--   <% if env['warden'] %>
     <%#= env['warden'] %>
     <br>(<%= env['warden'].user.nil? ? env['warden'].inspect : env['warden'].user.name %>)
     <br>(<%#= env.keys %>)
@@ -63,7 +63,7 @@
   <% else %>
     NO WARDEN
     <%#= Sinatra::Application.instance_variable_get("@middleware").inspect %>
-  <% end %>
+  <% end %> -->
   <div id="content">
     <%= yield %>
   </div>
