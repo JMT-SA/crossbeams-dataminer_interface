@@ -172,6 +172,7 @@ module Crossbeams
       plugin :indifferent_params
       plugin :assets, css: 'style.scss'#, js: 'behave.js'
       plugin :json_parser
+      plugin :flash
 
 
       route do |r|
@@ -483,7 +484,7 @@ module Crossbeams
                   @rpt.save(yp)
 
                   # Need a flash here...
-                  # flash[:notice] = "Report's header has been changed."
+                  flash[:notice] = "Report's header has been changed."
                   r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
                 end
               end
@@ -568,7 +569,7 @@ module Crossbeams
                     yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                     @rpt.save(yp)
 
-                    # flash[:notice] = "Parameter has been added."
+                    flash[:notice] = "Parameter has been added."
                     r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
                   end
                 end
@@ -589,7 +590,7 @@ module Crossbeams
                       @rpt.save(yp)
                       #puts @rpt.query_parameter_definitions.map { |p| p.column }.sort.join('; ')
                       #params.inspect
-                      #flash[:notice] = "Parameter has been deleted."
+                      flash[:notice] = "Parameter has been deleted."
                       r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
                     end
                   end

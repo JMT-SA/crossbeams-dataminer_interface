@@ -70,9 +70,9 @@
 
 <script>
   Jackbox.init();
-  <%# if flash[:notice] %>
-    //Jackbox.success('<%#= flash[:notice].tr("'", "`") %>');
-  <%# end %>
+  <% if flash[:notice] %>
+    Jackbox.success('<%= flash[:notice].tr("'", "`") %>');
+  <% end %>
 </script>
 
 </body>
