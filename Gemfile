@@ -4,4 +4,5 @@ source 'https://rubygems.org'
 gemspec
 
 # While testing DM:
-gem 'crossbeams-dataminer', path: File.join(File.dirname(__FILE__), '..', 'crossbeams-dataminer')
+gem 'crossbeams-dataminer', path: File.expand_path('../../crossbeams-dataminer', __FILE__)
+
