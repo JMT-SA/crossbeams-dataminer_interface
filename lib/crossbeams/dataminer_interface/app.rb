@@ -1,9 +1,21 @@
 module Crossbeams
   module DataminerInterface
     class App < Roda
+      use Rack::Session::Cookie, secret: "some_nice_long_random_string_DSKJH4378EYR7EGKUFH", key: "_myapp_session"
+
       plugin :middleware do |middleware, *args, &block|
         middleware.opts[:dm_config] = args
         block.call(middleware) if block
+      end
+
+      def current_user
+        return {} unless session[:user_id]
+        db_connection["SELECT * FROM users WHERE id = #{session[:user_id]}"].to_a.first
+        # UserRepo.new(DB.db).users.by_pk(session[:user_id]).one
+      end
+
+      def can_do_admin?
+        current_user[:department_name] == 'IT'
       end
 
       def settings
@@ -178,11 +190,56 @@ module Crossbeams
       route do |r|
         r.on 'dataminer' do
           r.root do
-            rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true)
+            grid_id = 'rpt_grid'
+            url     = '/dataminer/grid/'
+
+            head_section = <<-EOH
+          <div class="grid-head">
+            <label style="margin-left: 20px;">
+                <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('#{grid_id}', 'report_list')"><i class="fa fa-file"></i> Export to CSV</button>
+            </label>
+            <label style="margin-left: 20px;">
+                <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('#{grid_id}')"><i class="fa fa-cog"></i> Tool panel</button>
+            </label>
+            <label style="margin-left: 20px;">
+                <button class="pure-button" onclick="crossbeamsGridEvents.printAGrid('#{grid_id}', '#{url}')"><i class="fa fa-print"></i> Print</button>
+            </label>
+            <label style="margin-left: 20px;">
+                <input class="un-formed-input" onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="#{grid_id}"/>
+            </label>
+            <span class="grid-caption">
+              Report listing
+            </span>
+          </div>
+            EOH
 
             view(inline: <<-EOS)
-            <ol><li>#{rpt_list.map { |l| "<a href='/#{settings.url_prefix}report/#{l[:id]}'>#{l[:caption]}</a>" }.join('</li><li>')}</li></ol>
+          <div style="height:40em">#{head_section}
+            <div id="#{grid_id}" style="height: 100%;" class="ag-blue" data-gridurl="#{url}" data-grid="grid"></div>
+          </div>
             EOS
+          end
+
+          r.on 'grid' do
+            response['Content-Type'] = 'application/json'
+            rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true)
+            link     = "'/#{settings.url_prefix}report/'+data.id+'|run'"
+
+            col_defs = [{headerName: '',
+                        width: 60,
+                        suppressMenu: true,   suppressSorting: true,   suppressMovable: true,
+                        suppressFilter: true, enableRowGroup: false,   enablePivot: false,
+                        enableValue: false,   suppressCsvExport: true, suppressToolPanel: true,
+                        valueGetter: link,
+                        colId: "edit_link",
+                        cellRenderer: 'crossbeamsGridFormatters.hrefSimpleFormatter' },
+                        {headerName: 'Report caption', field: 'caption', width: 300},
+                        {headerName: 'File name', field: 'file', width: 600}
+                       ]
+            {
+              columnDefs: col_defs,
+              rowDefs:    rpt_list.sort_by { |rpt| rpt[:caption] }
+            }.to_json
           end
 
           r.on 'report' do

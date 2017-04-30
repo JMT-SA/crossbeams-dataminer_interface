@@ -54,16 +54,10 @@
   <% else %>
     <%= env['crossbeams.banner'] %>
   <% end %>
+  <% if session[:user_id] %>
+    <span class="ml3"> <%= current_user[:first_name] %> <%= current_user[:last_name] %> (<%= current_user[:department_name] %>)</span>
+  <% end %>
   <%= partial('menu') %>
-<!--   <% if env['warden'] %>
-    <%#= env['warden'] %>
-    <br>(<%= env['warden'].user.nil? ? env['warden'].inspect : env['warden'].user.name %>)
-    <br>(<%#= env.keys %>)
-    <br>(<%#= env['rack.session'].inspect %>)
-  <% else %>
-    NO WARDEN
-    <%#= Sinatra::Application.instance_variable_get("@middleware").inspect %>
-  <% end %> -->
   <div id="content">
     <%= yield %>
   </div>
