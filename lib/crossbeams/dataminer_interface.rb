@@ -5,6 +5,7 @@ require 'crossbeams/dataminer_interface/dm_creator'
 require 'crossbeams/dataminer_interface/dm_converter'
 
 require 'crossbeams/dataminer'
+require 'crossbeams/layout'
 require 'axlsx'
 require 'rouge'
 

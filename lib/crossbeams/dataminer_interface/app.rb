@@ -190,34 +190,8 @@ module Crossbeams
       route do |r|
         r.on 'dataminer' do
           r.root do
-            grid_id = 'rpt_grid'
-            url     = '/dataminer/grid/'
-
-            head_section = <<-EOH
-          <div class="grid-head">
-            <label style="margin-left: 20px;">
-                <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('#{grid_id}', 'report_list')"><i class="fa fa-file"></i> Export to CSV</button>
-            </label>
-            <label style="margin-left: 20px;">
-                <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('#{grid_id}')"><i class="fa fa-cog"></i> Tool panel</button>
-            </label>
-            <label style="margin-left: 20px;">
-                <button class="pure-button" onclick="crossbeamsGridEvents.printAGrid('#{grid_id}', '#{url}')"><i class="fa fa-print"></i> Print</button>
-            </label>
-            <label style="margin-left: 20px;">
-                <input class="un-formed-input" onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="#{grid_id}"/>
-            </label>
-            <span class="grid-caption">
-              Report listing
-            </span>
-          </div>
-            EOH
-
-            view(inline: <<-EOS)
-          <div style="height:40em">#{head_section}
-            <div id="#{grid_id}" style="height: 100%;" class="ag-blue" data-gridurl="#{url}" data-grid="grid"></div>
-          </div>
-            EOS
+            renderer = Crossbeams::Layout::Renderer::Grid.new('rpt_grid', '/dataminer/grid/', 'Report listing')
+            view(inline: renderer.render)
           end
 
           r.on 'grid' do
@@ -374,6 +348,8 @@ module Crossbeams
               @rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(from_cache: true)
               @menu     = ''
               view('admin/index')
+            # renderer = Renderer::Grid.new('rpt_grid', '/dataminer/admin/grid/', 'Report listing')
+            # view(inline: renderer.render)
             end
 
             r.on 'new' do

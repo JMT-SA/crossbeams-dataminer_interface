@@ -33,10 +33,14 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'roda', '~> 2.25'
   spec.add_dependency 'crossbeams-dataminer'
+  spec.add_dependency 'crossbeams-layout'
   spec.add_dependency 'axlsx'
   spec.add_dependency 'rouge'
 
   spec.add_development_dependency 'bundler', '~> 1.14'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'minitest', '~> 5.0'
+  spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'yard'
+  spec.add_development_dependency 'rubocop'
 end
