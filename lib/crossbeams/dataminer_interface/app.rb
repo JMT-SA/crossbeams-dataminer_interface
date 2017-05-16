@@ -1,179 +1,14 @@
 module Crossbeams
   module DataminerInterface
     class App < Roda
+      include Crossbeams::DataminerInterface::AppHelpers
+
       use Rack::Session::Cookie, secret: "some_nice_long_random_string_DSKJH4378EYR7EGKUFH", key: "_myapp_session"
 
       plugin :middleware do |middleware, *args, &block|
         middleware.opts[:dm_config] = args
         block.call(middleware) if block
       end
-
-      def current_user
-        return {} unless session[:user_id]
-        db_connection["SELECT * FROM users WHERE id = #{session[:user_id]}"].to_a.first
-        # UserRepo.new(DB.db).users.by_pk(session[:user_id]).one
-      end
-
-      def can_do_admin?
-        current_user[:department_name] == 'IT'
-      end
-
-      def settings
-        @settings ||= OpenStruct.new(opts[:dm_config].first)
-# dm_js_location, dm_css_location
-# dm_js_location: javascripts
-# dm_css_location: stylesheets
-      end
-
-      def db_connection
-        settings.db_connection
-      end
-
-      def lookup_report(id)
-        Crossbeams::DataminerInterface::DmReportLister.new(settings.dm_reports_location).get_report_by_id(id)
-      end
-
-    def clean_where(sql)
-      rems = sql.scan( /\{(.+?)\}/).flatten.map {|s| "#{s}={#{s}}" }
-      rems.each {|r| sql.gsub!(%r|and\s+#{r}|i,'') }
-        rems.each {|r| sql.gsub!(r,'') }
-      sql.sub!(/where\s*\(\s+\)/i, '')
-      sql
-    end
-
-    def sql_to_highlight(sql)
-      # wrap sql @ 120
-      width = 120
-      ar = sql.gsub(/from /i, "\nFROM ").gsub(/where /i, "\nWHERE ").gsub(/(left outer join |left join |inner join |join )/i, "\n\\1").split("\n")
-      wrapped_sql = ar.map {|a| a.scan(/\S.{0,#{width-2}}\S(?=\s|$)|\S+/).join("\n") }.join("\n")
-
-      theme = Rouge::Themes::Github.new
-      formatter = Rouge::Formatters::HTMLInline.new(theme)
-      lexer  = Rouge::Lexers::SQL.new
-      formatter.format(lexer.lex(wrapped_sql))
-    end
-
-    def yml_to_highlight(yml)
-      theme = Rouge::Themes::Github.new
-      formatter = Rouge::Formatters::HTMLInline.new(theme)
-      lexer  = Rouge::Lexers::YAML.new
-      formatter.format(lexer.lex(yml))
-    end
-
-    def setup_report_with_parameters(rpt, params)
-      #{"col"=>"users.department_id", "op"=>"=", "opText"=>"is", "val"=>"17", "text"=>"Finance", "caption"=>"Department"}
-      input_parameters = ::JSON.parse(params[:json_var])
-      # logger.info input_parameters.inspect
-      parms = []
-      # Check if this should become an IN parmeter (list of equal checks for a column.
-      eq_sel = input_parameters.select { |p| p['op'] == '=' }.group_by { |p| p['col'] }
-      in_sets = {}
-      in_keys = []
-      eq_sel.each do |col, qp|
-        in_keys << col if qp.length > 1
-      end
-
-      input_parameters.each do |in_param|
-        col = in_param['col']
-        if in_keys.include?(col)
-          in_sets[col] ||= []
-          in_sets[col] << in_param['val']
-          next
-        end
-        param_def = @rpt.parameter_definition(col)
-        if 'between' == in_param['op']
-          parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new(in_param['op'], [in_param['val'], in_param['val_to']], param_def.data_type))
-        else
-          parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new(in_param['op'], in_param['val'], param_def.data_type))
-        end
-      end
-      in_sets.each do |col, vals|
-        param_def = @rpt.parameter_definition(col)
-        parms << Crossbeams::Dataminer::QueryParameter.new(col, Crossbeams::Dataminer::OperatorValue.new('in', vals, param_def.data_type))
-      end
-
-      rpt.limit  = params[:limit].to_i  if params[:limit] != ''
-      rpt.offset = params[:offset].to_i if params[:offset] != ''
-      begin
-        rpt.apply_params(parms)
-      rescue StandardError => e
-        return "ERROR: #{e.message}"
-      end
-    end
-
-      def make_options(ar)
-        ar.map do |a|
-          if a.kind_of?(Array)
-            "<option value=\"#{a.last}\">#{a.first}</option>"
-          else
-            "<option value=\"#{a}\">#{a}</option>"
-          end
-        end.join("\n")
-      end
-
-    def select_options(value, opts, with_blank = true)
-      ar = []
-      ar << "<option value=''></option>" if with_blank
-      opts.each do |opt|
-        if opt.kind_of? Array
-          text, val = opt
-        else
-          val = opt
-          text  = opt
-        end
-        is_sel = val.to_s == value.to_s
-        ar << "<option value='#{val}'#{is_sel ? ' selected' : ''}>#{text}</option>"
-      end
-      ar.join("\n")
-    end
-
-    def make_query_param_json(query_params)
-      common_ops = [
-        ['is', "="],
-        ['is not', "<>"],
-        ['greater than', ">"],
-        ['less than', "<"],
-        ['greater than or equal to', ">="],
-        ['less than or equal to', "<="],
-        ['is blank', "is_null"],
-        ['is NOT blank', "not_null"]
-      ]
-      text_ops = [
-        ['starts with', "starts_with"],
-        ['ends with', "ends_with"],
-        ['contains', "contains"]
-      ]
-      date_ops = [
-        ['between', "between"]
-      ]
-      # ar = []
-      qp_hash = {}
-      query_params.each do |query_param|
-        hs = {column: query_param.column, caption: query_param.caption,
-              default_value: query_param.default_value, data_type: query_param.data_type,
-              control_type: query_param.control_type}
-        if query_param.control_type == :list
-          hs[:operator] = common_ops
-          if query_param.includes_list_options?
-            hs[:list_values] = query_param.build_list.list_values
-          else
-            hs[:list_values] = query_param.build_list {|sql| db_connection[sql].all.map {|r| r.values } }.list_values
-          end
-        elsif query_param.control_type == :daterange
-          hs[:operator] = date_ops + common_ops
-        else
-          hs[:operator] = common_ops + text_ops
-        end
-        # ar << hs
-        qp_hash[query_param.column] = hs
-      end
-      # ar.to_json
-      qp_hash.to_json
-    end
-
-    def the_url_prefix
-      settings.url_prefix
-    end
 
 
       plugin :render, views: File.join(File.dirname(__FILE__), 'views')
@@ -208,7 +43,11 @@ module Crossbeams
                         colId: "edit_link",
                         cellRenderer: 'crossbeamsGridFormatters.hrefSimpleFormatter' },
                         {headerName: 'Report caption', field: 'caption', width: 300},
-                        {headerName: 'File name', field: 'file', width: 600}
+                        {headerName: 'File name', field: 'file', width: 600},
+                        {headerName: 'Crosstab?', field: 'crosstab',
+                         cellRenderer: 'crossbeamsGridFormatters.booleanFormatter',
+                         cellClass:    'grid-boolean-column',
+                         width:        100}
                        ]
             {
               columnDefs: col_defs,
@@ -223,8 +62,8 @@ module Crossbeams
                 @qps = @rpt.query_parameter_definitions
                 @rpt_id = id
                 @load_params = params[:back] && params[:back] == 'y'
+                @crosstab_config = lookup_crosstab(id)
 
-                @menu = 'NO MENU' # menu
                 @report_action = "/#{settings.url_prefix}report/#{id}/run"
                 @excel_action = "/#{settings.url_prefix}extract/#{id}/xls"
 
@@ -232,8 +71,13 @@ module Crossbeams
               end
 
               r.post 'run' do
-                @rpt = lookup_report(id)
-                setup_report_with_parameters(@rpt, params)
+                # puts params.inspect
+                # {"limit"=>"", "offset"=>"", "crosstab"=>{"row_columns"=>["organization_code", "commodity_code", "fg_code_old"], "column_columns"=>"grade_code", "value_columns"=>"no_pallets"}, "btnSubmit"=>"Run report", "json_var"=>"[]"}
+
+                @rpt          = lookup_report(id)
+                crosstab_hash = lookup_crosstab(id)
+
+                setup_report_with_parameters(@rpt, params, crosstab_hash)
 
                 @col_defs = []
                 @rpt.ordered_columns.each do | col|
@@ -242,6 +86,10 @@ module Crossbeams
                   hs[:enableValue]    = true if [:integer, :number].include?(col.data_type)
                   hs[:enableRowGroup] = true unless hs[:enableValue] && !col.groupable
                   hs[:enablePivot]    = true unless hs[:enableValue] && !col.groupable
+                  hs[:rowGroupIndex]  = col.group_by_seq if col.group_by_seq
+                  hs[:cellRenderer]   = 'group' if col.group_by_seq
+                  hs[:cellRendererParams] = { restrictToOneGroup: true } if col.group_by_seq
+                  hs[:aggFunc]        = 'sum' if col.group_sum
                   if [:integer, :number].include?(col.data_type)
                     hs[:cellClass] = 'grid-number-column'
                     hs[:width]     = 100 if col.width.nil? && col.data_type == :integer
@@ -272,7 +120,7 @@ module Crossbeams
                   view('report/display')
 
                 rescue Sequel::DatabaseError => e
-                  render(inline: <<-EOS)
+                  view(inline: <<-EOS)
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
                   <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
                   <pre>#{e.message}</pre>
@@ -289,8 +137,10 @@ module Crossbeams
           r.on 'extract' do
             r.on :id do |id|
               r.post 'xls' do
-                @rpt = lookup_report(id)
-                setup_report_with_parameters(@rpt, params)
+                @rpt          = lookup_report(id)
+                crosstab_hash = lookup_crosstab(id)
+
+                setup_report_with_parameters(@rpt, params, crosstab_hash)
 
                 begin
                   xls_possible_types = {string: :string, integer: :integer, date: :string,

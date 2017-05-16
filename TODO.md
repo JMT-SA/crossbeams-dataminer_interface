@@ -163,7 +163,7 @@ ORDER BY organization_code, grade_code, commodity_code, marketing_variety_code, 
 
 'SELECT DISTINCT grade_code FROM vwonstock_pallets WHERE build_status = ''FULL'' AND packed_by = ''KROMCO'' AND load_number IS NULL ORDER BY 1')
 AS (
-row_name character varying[],
+row_name varchar[],
 g_1A integer,
 g_1L integer,
 g_1Y integer,
@@ -172,3 +172,4 @@ g_2L integer,
 g_SA integer
 );
 ~~~
+

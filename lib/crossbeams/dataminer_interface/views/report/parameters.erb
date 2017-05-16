@@ -1,5 +1,5 @@
 <h1>Fill in parameters</h1>
-<%= @menu %>
+
 <h2><%= @rpt.caption %></h2>
 
 <form action='<%= @report_action %>' id="rp_form" method=post class="crossbeams-form" onsubmit="crossbeamsDataMinerParams.storeCurrentParams('<%=@rpt_id%>'); crossbeamsUtils.addJSONVarToForm('rp_form', crossbeamsDataMinerParams.current_values);">
@@ -24,7 +24,47 @@
       </select>
       <div id="qp_form" style="display:inline-block"></div>
       <div id="param_display"></div>
+    </div>
+  </div>
 
+  <% if @crosstab_config %>
+    <h3>Choose crosstab (pivot) settings</h3>
+    <div class="crossbeams-row">
+      <div class="crossbeams-col">
+        <p>Choose column(s) for the row:</p>
+        <% @crosstab_config[:row_columns].each_with_index do |row_column, index| %>
+          <div class="crossbeams-field">
+            <input id="row_columns_<%=index%>" type="checkbox" name='crosstab[row_columns][]' value="<%= row_column %>" checked=checked" />
+            <label for="row_columns_<%=index%>"><%= row_column %></label>
+          </div>
+        <% end %>
+      </div>
+      <div class="crossbeams-col">
+        <!-- - checkboxen ( choose order...?) -->
+        <p>Choose the column to pivot:</p>
+        <% @crosstab_config[:column_columns].each_with_index do |col, index| %>
+          <% column_column = col.keys.first %>
+          <div class="crossbeams-field">
+            <input id="column_column" type="radio" name='crosstab[column_column]' value="<%= column_column %>" <%= index == 0 ? 'checked="checked"' : '' %> />
+            <label for="column_column"><%= column_column %></label>
+          </div>
+        <% end %>
+      </div>
+      <div class="crossbeams-col">
+        <p>Choose the value to be used:</p>
+        <% @crosstab_config[:value_columns].each_with_index do |col, index| %>
+          <% value_column = col.keys.first %>
+          <div class="crossbeams-field">
+            <input id="value_column" type="radio" name='crosstab[value_column]' value="<%= value_column %>" <%= index == 0 ? 'checked="checked"' : '' %> />
+            <label for="value_column"><%= value_column %></label>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="crossbeams-row">
+    <div class="crossbeams-col">
       <div class="crossbeams-actions">
         <input type="submit" name="btnSubmit" value="Run report" data-disable-with="Run report" class="white bg-green br2 dim pa3 ba b--near-white">
         <button type='submit' id="run_excel" name="btnSubmit" formaction="<%= @excel_action %>" data-disable-with="Create Excel report" class="near-white bg-green br2 dim pa3 ml4 ba b--near-white"><i class="fa fa-file-excel-o"></i> Download Excel report</button>
