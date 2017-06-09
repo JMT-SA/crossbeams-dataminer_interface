@@ -31,7 +31,7 @@
 </form>
 </fieldset>
 <hr>
-<button onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false" class="pure-button"><i class="fa fa-info"></i> Toggle SQL view</button>
+<button onclick="crossbeamsUtils.toggleVisibility('sql_code', this);return false" class="pure-button"><i class="fa fa-info"></i> Toggle SQL view</button>
 <button disabled class="pure-button" >Change SQL</button>
 <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
 <hr>

@@ -124,7 +124,7 @@ module Crossbeams
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
                   <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
                   <pre>#{e.message}</pre>
-                  <button class="pure-button" onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false">
+                  <button class="pure-button" onclick="crossbeamsUtils.toggleVisibility('sql_code', this);return false">
                     <i class="fa fa-info"></i> Toggle SQL
                   </button>
                   <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
@@ -183,7 +183,7 @@ module Crossbeams
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
                   <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
                   <pre>#{e.message}</pre>
-                  <button class="pure-button" onclick="crossbeamsUtils.toggle_visibility('sql_code', this);return false">
+                  <button class="pure-button" onclick="crossbeamsUtils.toggleVisibility('sql_code', this);return false">
                     <i class="fa fa-info"></i> Toggle SQL
                   </button>
                   <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
