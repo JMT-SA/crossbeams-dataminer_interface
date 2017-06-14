@@ -296,7 +296,7 @@ module Crossbeams
                              {headerName: 'Caption', field: 'caption', editable: true},
                              {headerName: 'Namespaced Name', field: 'namespaced_name'},
                              {headerName: 'Data type', field: 'data_type', editable: true, cellEditor: 'select', cellEditorParams: {
-                               values: ['string', 'integer', 'number', 'date', 'datetime']
+                               values: ['string', 'boolean', 'integer', 'number', 'date', 'datetime']
                              }},
                              {headerName: 'Width', field: 'width', cellClass: 'grid-number-column', editable: true, cellEditor: 'NumericCellEditor'}, # editable NUM ONLY...
                              {headerName: 'Format', field: 'format', editable: true, cellEditor: 'select', cellEditorParams: {
