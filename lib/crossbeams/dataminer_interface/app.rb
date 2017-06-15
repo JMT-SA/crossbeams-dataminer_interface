@@ -25,7 +25,7 @@ module Crossbeams
       route do |r|
         r.on 'dataminer' do
           r.root do
-            renderer = Crossbeams::Layout::Renderer::Grid.new('rpt_grid', '/dataminer/grid/', 'Report listing')
+            renderer = Crossbeams::Layout::Renderer::Grid.new('rpt_grid', '/dataminer/grid/', 'Report listing', false)
             view(inline: renderer.render)
           end
 
