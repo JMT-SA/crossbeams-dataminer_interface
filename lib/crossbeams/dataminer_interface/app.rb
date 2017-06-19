@@ -308,9 +308,7 @@ module Crossbeams
                              {headerName: 'Can group by?', field: 'groupable', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
                              }},
-                             {headerName: 'Group Seq', field: 'group_by_seq', cellClass: 'grid-number-column', headerTooltip: 'If the grid opens grouped, this is the grouping level', editable: true, cellEditor: 'select', cellEditorParams: {
-                               values: [true, false]
-                             }},
+                             {headerName: 'Group Seq', field: 'group_by_seq', cellClass: 'grid-number-column', headerTooltip: 'If the grid opens grouped, this is the grouping level', editable: true, cellEditor: 'NumericCellEditor'},
                              {headerName: 'Sum?', field: 'group_sum', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
                              }},
@@ -389,6 +387,9 @@ module Crossbeams
                   col.send("#{attrib}=", value.to_sym)
                 else
                   value = value.to_i if attrib == 'width' && !value.nil?
+                  value = value.to_i if attrib == 'group_seq' && !value.nil?
+                  value = true if value && value == 'true'
+                  value = false if value && value == 'false'
                   col.send("#{attrib}=", value)
                 end
                 puts ">>> ATTR: #{attrib} - #{value} #{value.class}"
