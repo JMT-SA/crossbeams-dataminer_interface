@@ -1,3 +1,4 @@
+require 'roda'
 require 'crossbeams/dataminer_interface/version'
 require 'crossbeams/dataminer_interface/app_helpers'
 require 'crossbeams/dataminer_interface/app'

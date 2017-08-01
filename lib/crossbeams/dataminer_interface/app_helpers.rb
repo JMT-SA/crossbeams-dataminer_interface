@@ -15,7 +15,7 @@ module Crossbeams
       #
       # @return [Boolean] true if the user can do admin tasks.
       def can_do_admin?
-        current_user[:department_name] == 'IT'
+        true # current_user[:department_name] == 'IT'
       end
 
       # The settings passed to the app.

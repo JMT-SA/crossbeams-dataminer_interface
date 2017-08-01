@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'roda', '~> 2.25'
+  spec.add_dependency 'tilt'
   spec.add_dependency 'crossbeams-dataminer'
   spec.add_dependency 'crossbeams-layout'
   spec.add_dependency 'axlsx'

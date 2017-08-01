@@ -347,6 +347,41 @@ module Crossbeams
                 view('admin/edit')
               end
 
+              r.on 'reorder_columns' do
+                @report = lookup_report(id)
+                cols    = @report.ordered_columns.map { | column| ["#{column.name} (#{column.caption})", column.name] }
+                obj     = OpenStruct.new
+                obj.id  = id
+                rules   = { fields: { id: { renderer: :hidden } } }
+                layout  = Crossbeams::Layout::Page.build(rules) do |page|
+                  page.form_object obj
+                  page.form do |form|
+                    form.action "/#{settings.url_prefix}admin/#{id}/save_reordered_columns"
+                    form.add_field :id
+                    form.add_text 'Drag and drop to re-order. Press submit to save the new order.'
+                    form.add_sortable_list('dm', cols)
+                  end
+                end
+
+                show_page { layout }
+              end
+
+              r.on 'save_reordered_columns' do
+                r.post do
+                  @report = lookup_report(id)
+                  col_order = params[:dm_sorted_ids].split(',')
+                  col_order.each_with_index do |col, index|
+                    @report.columns[col].sequence_no = index + 1
+                  end
+                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  yp       = Crossbeams::Dataminer::YamlPersistor.new(filename)
+                  @report.save(yp)
+
+                  flash[:notice] = "Report's column order has been changed."
+                  r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
+                end
+              end
+
               r.on 'save' do
                 r.post do
                   # if new name <> old name, make sure new name has .yml, no spaces and lowercase....
@@ -483,6 +518,12 @@ module Crossbeams
             end
           end
         end
+      end
+
+      def show_page(&block)
+        @layout = block.yield
+        # @layout.add_csrf_tag(csrf_tag)
+        view('crossbeams_layout_page')
       end
     end
   end
