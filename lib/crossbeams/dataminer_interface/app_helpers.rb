@@ -7,8 +7,7 @@ module Crossbeams
       # @return [Hash] the user record.
       def current_user
         return {} unless session[:user_id]
-        db_connection["SELECT * FROM users WHERE id = #{session[:user_id]}"].to_a.first
-        # UserRepo.new(DB.db).users.by_pk(session[:user_id]).one
+        db_connection["SELECT * FROM users WHERE id = #{session[:user_id]}"].first
       end
 
       # Does the logged-in user have admin permission.
@@ -30,7 +29,7 @@ module Crossbeams
 
       # Database connection.
       #
-      # @return [ROM::SQL::Gateway] the database connection.
+      # @return [Sequel::Database] the database connection.
       def db_connection
         settings.db_connection
       end

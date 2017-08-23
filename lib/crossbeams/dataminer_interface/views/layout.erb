@@ -63,7 +63,7 @@
     <%= env['crossbeams.banner'] %>
   <% end %>
   <% if session[:user_id] %>
-    <span class="ml3"> <%= current_user[:first_name] %> <%= current_user[:last_name] %> (<%= current_user[:department_name] %>)</span>
+    <span class="ml3"> <%= current_user[:user_name] %> <%= current_user[:department_name].nil? ? '' : "(#{current_user[:department_name]})" %></span>
   <% end %>
   <%= partial('menu') %>
   <div id="content">

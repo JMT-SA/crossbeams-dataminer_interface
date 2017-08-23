@@ -3,7 +3,7 @@ module Crossbeams
     class App < Roda
       include Crossbeams::DataminerInterface::AppHelpers
 
-      use Rack::Session::Cookie, secret: "some_nice_long_random_string_DSKJH4378EYR7EGKUFH", key: "_myapp_session"
+      # use Rack::Session::Cookie, secret: "some_nice_long_random_string_DSKJH4378EYR7EGKUFH", key: "_myapp_session"
 
       plugin :middleware do |middleware, *args, &block|
         middleware.opts[:dm_config] = args
@@ -14,7 +14,7 @@ module Crossbeams
       plugin :render, views: File.join(File.dirname(__FILE__), 'views')
       plugin :partials
       plugin :public
-      plugin :view_subdirs
+      plugin :view_options
       plugin :content_for, :append=>true
       plugin :indifferent_params
       plugin :assets, css: 'style.scss'#, js: 'behave.js'
@@ -364,6 +364,42 @@ module Crossbeams
                 end
 
                 show_page { layout }
+              end
+
+              r.on 'change_sql' do
+                report = lookup_report(id)
+                obj     = OpenStruct.new
+                obj.id  = id
+                obj.sql = report.sql
+                rules   = { fields: { id: { renderer: :hidden },
+                                      sql: { renderer: :textarea,
+                                             cols: 60,
+                                             rows: 25 }
+                                    },
+                            name: 'report'.freeze }
+                layout  = Crossbeams::Layout::Page.build(rules) do |page|
+                  page.form_object obj
+                  page.form do |form|
+                    form.action "/#{settings.url_prefix}admin/#{id}/save_new_sql"
+                    form.add_field :id
+                    form.add_field :sql
+                  end
+                end
+
+                show_page { layout }
+              end
+
+              r.on 'save_new_sql' do
+                r.post do
+                  report = lookup_report(id)
+                  report.sql = params[:report][:sql]
+                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  yp       = Crossbeams::Dataminer::YamlPersistor.new(filename)
+                  report.save(yp)
+
+                  flash[:notice] = "Report's SQL has been changed."
+                  r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
+                end
               end
 
               r.on 'save_reordered_columns' do
