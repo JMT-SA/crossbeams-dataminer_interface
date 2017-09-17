@@ -10,20 +10,7 @@
 </div>
 
 <div style="height:40em">
-  <div class="grid-head">
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('grd1', '<%= @rpt.caption.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') %>.csv')"><i class="fa fa-file"></i> Export to CSV</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('grd1')"><i class="fa fa-cog"></i> Tool panel</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <input class="un-formed-input" onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="grd1"/>
-    </label>
-    <span class="grid-caption">
-      <%= @rpt.caption %>
-    </span>
-  </div>
+  <%= Crossbeams::Layout::Renderer::Grid.header('grd1', @rpt.caption) %>
   <div id="grd1" style="height: 100%;" class="ag-blue"></div>
 </div>
 
@@ -114,6 +101,7 @@
 //console.log(grid_id);
       //for_print = grid.dataset.gridPrint;
       gridOptions = {
+        context: { domGridId: 'grd1' },
         columnDefs: colDefs,
         rowData: rowDefs,
                 enableColResize: true,
@@ -125,11 +113,20 @@
         // animateRows: true,
                 enableRangeSelection: true,
                 enableStatusBar: true,
-                suppressAggFuncInHeader: true
+                suppressAggFuncInHeader: true,
+                onFilterChanged: function () {
+                  let filterLength = 0;
+                  let rows = 0;
+                  this.api.forEachLeafNode((n) => { rows += 1; });
+                  this.api.forEachNodeAfterFilter((n) => { if (!n.group) { filterLength += 1; } });
+                  crossbeamsGridEvents.displayRowCounts('grd1', filterLength, rows);
+                },
               };
 
       new agGrid.Grid(grid, gridOptions);
       crossbeamsGridStore.addGrid(grid_id, gridOptions);
+      // crossbeamsGridEvents.displayRowCounts('grd1', filterLength, rows);
+      gridOptions.onFilterChanged();
       //loadGrid(grid, gridOptions);
   }).call(this);
 </script>

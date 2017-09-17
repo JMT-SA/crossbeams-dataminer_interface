@@ -45,7 +45,7 @@ module Crossbeams
           column_types = {}
           tables.each do |table|
             # puts ">>> TABLE: #{table}"
-            db.connection.schema(table.sub('public.', '')).each do |col| # NB problem if another schema used... ... db.connection == Sequel.connection from ROM.
+            db.schema(table.sub('public.', '')).each do |col| # NB problem if another schema used... ... db.connection == Sequel.connection from ROM.
               # puts ">>> COL: #{col}"
               type = col[1][:type]
               column_types[col.first.to_s] = case type # translate into :number etc...
