@@ -291,9 +291,9 @@ module Crossbeams
                 @id  = id
                 @filename = File.basename(DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id))
 
-                @col_defs = [{headerName: 'Column Name', field: 'name'},
-                             {headerName: 'Sequence', field: 'sequence_no', cellClass: 'grid-number-column'}, # to be changed in group...
-                             {headerName: 'Caption', field: 'caption', editable: true},
+                @col_defs = [{headerName: 'Column Name', field: 'name', pinned: 'left'},
+                             {headerName: 'Seq', field: 'sequence_no', cellClass: 'grid-number-column', pinned: 'left', width: 80 }, # to be changed in group...
+                             {headerName: 'Caption', field: 'caption', editable: true, pinned: 'left'},
                              {headerName: 'Namespaced Name', field: 'namespaced_name'},
                              {headerName: 'Data type', field: 'data_type', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: ['string', 'boolean', 'integer', 'number', 'date', 'datetime']
