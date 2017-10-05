@@ -111,6 +111,7 @@
             // groupSuppressAutoColumn: true,
             // groupHideOpenParents: true,
         // animateRows: true,
+                rowSelection: 'single',
                 enableRangeSelection: true,
                 enableStatusBar: true,
                 suppressAggFuncInHeader: true,
@@ -127,6 +128,7 @@
       crossbeamsGridStore.addGrid(grid_id, gridOptions);
       // crossbeamsGridEvents.displayRowCounts('grd1', filterLength, rows);
       gridOptions.onFilterChanged();
+      crossbeamsGridEvents.makeColumnScrollList(gridOptions.context.domGridId, colDefs);
       //loadGrid(grid, gridOptions);
   }).call(this);
 </script>
