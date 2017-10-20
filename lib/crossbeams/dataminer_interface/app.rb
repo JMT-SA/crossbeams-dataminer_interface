@@ -194,12 +194,24 @@ module Crossbeams
           end
 
           r.on 'admin' do
+            rep_loc = admin_report_path
+
             r.root do
-              @rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(from_cache: true)
+              @rpt_list = DmReportLister.new(rep_loc).get_report_list(from_cache: true)
               @menu     = ''
               view('admin/index')
             # renderer = Renderer::Grid.new('rpt_grid', '/dataminer/admin/grid/', 'Report listing')
             # view(inline: renderer.render)
+            end
+
+            r.on 'reports' do
+              session[:dm_admin_path] = :reports
+              r.redirect("/#{settings.url_prefix}admin/")
+            end
+
+            r.on 'grids' do
+              session[:dm_admin_path] = :grids
+              r.redirect("/#{settings.url_prefix}admin/")
             end
 
             r.on 'new' do
@@ -225,7 +237,7 @@ module Crossbeams
                   @err = e.message
                 end
                 # Check for existing file name...
-                if File.exists?(File.join(settings.dm_reports_location, @filename))
+                if File.exist?(File.join(rep_loc, @filename))
                   @err = 'A file with this name already exists'
                 end
                 # Write file, rebuild index and go to edit...
@@ -233,9 +245,9 @@ module Crossbeams
                 if @err.empty?
                   # run the report with limit 1 and set up datatypes etc.
                   DmCreator.new(db_connection, @rpt).modify_column_datatypes
-                  yp = Crossbeams::Dataminer::YamlPersistor.new(File.join(settings.dm_reports_location, @filename))
+                  yp = Crossbeams::Dataminer::YamlPersistor.new(File.join(rep_loc, @filename))
                   @rpt.save(yp)
-                  DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
+                  DmReportLister.new(rep_loc).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
 
                   view(inline: <<-EOS)
                   <h1>Saved file...got to admin index and edit...</h1>
@@ -274,8 +286,8 @@ module Crossbeams
                 yml = params[:yml]
                 hash = YAML.load(yml) ### --- could pass the params from the old yml & set them up too....
                 hash['query'] = params[:sql]
-                rpt = DmConverter.new(settings.dm_reports_location).convert_hash(hash, params[:filename])
-                DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
+                rpt = DmConverter.new(rep_loc).convert_hash(hash, params[:filename])
+                DmReportLister.new(rep_loc).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
 
                 view(inline: <<-EOS)
                 <h1>Converted</h1>
@@ -287,9 +299,10 @@ module Crossbeams
 
             r.on :id do |id|
               r.on 'edit' do
-                @rpt = lookup_report(id)
+                @rpt = lookup_admin_report(id)
                 @id  = id
-                @filename = File.basename(DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id))
+
+                @filename = File.basename(DmReportLister.new(rep_loc).get_file_name_by_id(id))
 
                 @col_defs = [{headerName: 'Column Name', field: 'name', pinned: 'left'},
                              {headerName: 'Seq', field: 'sequence_no', cellClass: 'grid-number-column', pinned: 'left', width: 80 }, # to be changed in group...
@@ -348,7 +361,7 @@ module Crossbeams
               end
 
               r.on 'reorder_columns' do
-                @report = lookup_report(id)
+                @report = lookup_admin_report(id)
                 cols    = @report.ordered_columns.map { | column| ["#{column.name} (#{column.caption})", column.name] }
                 obj     = OpenStruct.new
                 obj.id  = id
@@ -367,7 +380,7 @@ module Crossbeams
               end
 
               r.on 'change_sql' do
-                report = lookup_report(id)
+                report = lookup_admin_report(id)
                 obj     = OpenStruct.new
                 obj.id  = id
                 obj.sql = report.sql
@@ -391,9 +404,9 @@ module Crossbeams
 
               r.on 'save_new_sql' do
                 r.post do
-                  report = lookup_report(id)
+                  report = lookup_admin_report(id)
                   report.sql = params[:report][:sql]
-                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                   yp       = Crossbeams::Dataminer::YamlPersistor.new(filename)
                   report.save(yp)
 
@@ -404,12 +417,12 @@ module Crossbeams
 
               r.on 'save_reordered_columns' do
                 r.post do
-                  @report = lookup_report(id)
+                  @report = lookup_admin_report(id)
                   col_order = params[:dm_sorted_ids].split(',')
                   col_order.each_with_index do |col, index|
                     @report.columns[col].sequence_no = index + 1
                   end
-                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                   yp       = Crossbeams::Dataminer::YamlPersistor.new(filename)
                   @report.save(yp)
 
@@ -421,9 +434,9 @@ module Crossbeams
               r.on 'save' do
                 r.post do
                   # if new name <> old name, make sure new name has .yml, no spaces and lowercase....
-                  @rpt = lookup_report(id)
+                  @rpt = lookup_admin_report(id)
 
-                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                   if File.basename(filename) != params[:filename]
                     puts "new name: #{params[:filename]} for #{File.basename(filename)}"
                   else
@@ -446,7 +459,7 @@ module Crossbeams
       #      - split editors into another JS file
       #      - ditto formatters etc...
               r.on 'save_param_grid_col' do # JSON
-                @rpt = lookup_report(id)
+                @rpt = lookup_admin_report(id)
                 col = @rpt.columns[params[:key_val]]
                 attrib = params[:col_name]
                 value  = params[:col_val]
@@ -477,7 +490,7 @@ module Crossbeams
                 if value.nil? && attrib == 'caption' # Cannot be nil...
                   {status: 'error', message: "Caption for #{params[:key_val]} cannot be blank"}.to_json
                 else
-                  filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                  filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                   yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                   @rpt.save(yp)
                   if send_changes
@@ -491,7 +504,7 @@ module Crossbeams
 
               r.on 'parameter' do
                 r.on 'new' do
-                  @rpt = lookup_report(id)
+                  @rpt = lookup_admin_report(id)
                   @cols = @rpt.ordered_columns.map { |c| c.namespaced_name }.compact
                   @tables = @rpt.tables
                   @id = id
@@ -501,7 +514,7 @@ module Crossbeams
                 r.on 'create' do
                   r.post do
                     # Validate... also cannot ad dif col exists as param already
-                    @rpt = lookup_report(id)
+                    @rpt = lookup_admin_report(id)
 
                     col_name = params[:column]
                     if col_name.nil? || col_name.empty?
@@ -520,7 +533,7 @@ module Crossbeams
                     param = Crossbeams::Dataminer::QueryParameterDefinition.new(col_name, opts)
                     @rpt.add_parameter_definition(param)
 
-                    filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                    filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                     yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                     @rpt.save(yp)
 
@@ -533,13 +546,13 @@ module Crossbeams
                   r.on :param_id do |param_id|
                     r.post do # TODO: Can we use delete verb?
                       puts ">>> #{id} | #{param_id}..."
-                      @rpt = lookup_report(id)
+                      @rpt = lookup_admin_report(id)
                       puts ">>> #{param_id}"
                       # puts @rpt.query_parameter_definitions.length
                       puts @rpt.query_parameter_definitions.map { |p| p.column }.sort.join('; ')
                       @rpt.query_parameter_definitions.delete_if { |p| p.column == param_id }
                       # puts @rpt.query_parameter_definitions.length
-                      filename = DmReportLister.new(settings.dm_reports_location).get_file_name_by_id(id)
+                      filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                       # puts filename
                       yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                       @rpt.save(yp)

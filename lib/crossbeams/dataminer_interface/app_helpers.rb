@@ -34,20 +34,38 @@ module Crossbeams
         settings.db_connection
       end
 
+      # Get the report location path
+      #
+      # @param id [String] the report id.
+      # @return [Crossbeams::Dataminer::Report] the report.
+      def admin_report_path
+        session[:dm_admin_path] == :reports ? settings.dm_reports_location : settings.dm_grid_queries_location
+      end
+
       # Get a Report from an id.
       #
       # @param id [String] the report id.
       # @return [Crossbeams::Dataminer::Report] the report.
-      def lookup_report(id)
-        Crossbeams::DataminerInterface::DmReportLister.new(settings.dm_reports_location).get_report_by_id(id)
+      def lookup_report(id, loc_for_admin = false)
+        rep_loc = loc_for_admin ? admin_report_path : settings.dm_reports_location
+        Crossbeams::DataminerInterface::DmReportLister.new(rep_loc).get_report_by_id(id)
+      end
+
+      # Get an ADMIN Report from an id.
+      #
+      # @param id [String] the report id.
+      # @return [Crossbeams::Dataminer::Report] the report.
+      def lookup_admin_report(id)
+        lookup_report(id, true)
       end
 
       # Get a Report's crosstab configuration from an id.
       #
       # @param id [String] the report id.
       # @return [Hash] the crosstab configuration from the report's YAML definition.
-      def lookup_crosstab(id)
-        Crossbeams::DataminerInterface::DmReportLister.new(settings.dm_reports_location).get_crosstab_hash_by_id(id)
+      def lookup_crosstab(id, loc_for_admin = false)
+        rep_loc = loc_for_admin ? admin_report_path : settings.dm_reports_location
+        Crossbeams::DataminerInterface::DmReportLister.new(rep_loc).get_crosstab_hash_by_id(id)
       end
 
       # Remove artifacts from old dataminer WHERE clause specifications.

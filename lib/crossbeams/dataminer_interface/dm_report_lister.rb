@@ -3,6 +3,10 @@ module Crossbeams
     class DmReportLister
       def initialize(path)
         @path = Pathname.new(path)
+        if !File.exist?(File.join(path, '.dm_report_list.yml'))
+          make_list
+          persist_list
+        end
       end
 
       def get_report_by_id(id)
