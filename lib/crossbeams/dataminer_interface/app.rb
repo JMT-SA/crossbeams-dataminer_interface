@@ -120,7 +120,7 @@ module Crossbeams
                   view('report/display')
 
                 rescue Sequel::DatabaseError => e
-                  view(inline: <<-EOS)
+                  view(inline: <<-HTML)
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
                   <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
                   <pre>#{e.message}</pre>
@@ -128,7 +128,7 @@ module Crossbeams
                     <i class="fa fa-info"></i> Toggle SQL
                   </button>
                   <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
-                  EOS
+                  HTML
                 end
               end
             end
@@ -179,7 +179,7 @@ module Crossbeams
                   end
 
                 rescue Sequel::DatabaseError => e
-                  erb(<<-EOS)
+                  erb(<<-HTML)
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
                   <p>Report: <em>#{@rpt.caption}</em></p>The error message is:
                   <pre>#{e.message}</pre>
@@ -187,7 +187,7 @@ module Crossbeams
                     <i class="fa fa-info"></i> Toggle SQL
                   </button>
                   <pre id="sql_code" style="display:none;"><%= sql_to_highlight(@rpt.runnable_sql) %></pre>
-                  EOS
+                  HTML
                 end
               end
             end
@@ -249,7 +249,7 @@ module Crossbeams
                   @rpt.save(yp)
                   DmReportLister.new(rep_loc).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
 
-                  view(inline: <<-EOS)
+                  view(inline: <<-HTML)
                   <h1>Saved file...got to admin index and edit...</h1>
                   <p>Filename: <em><%= @filename %></em></p>
                   <p>Caption: <em><%= @rpt.caption %></em></p>
@@ -258,7 +258,7 @@ module Crossbeams
                     <p><%= column %></p>
                   <% end %>
                   </p>
-                  EOS
+                  HTML
                 else
                   view('admin/new')
                 end
@@ -289,11 +289,11 @@ module Crossbeams
                 rpt = DmConverter.new(rep_loc).convert_hash(hash, params[:filename])
                 DmReportLister.new(rep_loc).get_report_list(persist: true) # Kludge to ensure list is rebuilt...
 
-                view(inline: <<-EOS)
+                view(inline: <<-HTML)
                 <h1>Converted</h1>
                 <p>New YAML code:</p>
                 <pre>#{yml_to_highlight(rpt.to_hash.to_yaml)}</pre>
-                EOS
+                HTML
               end
             end
 

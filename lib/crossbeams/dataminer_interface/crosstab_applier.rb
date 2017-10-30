@@ -93,12 +93,12 @@ module Crossbeams
 
       def build_crosstab_sql
         base_sql = @report.runnable_sql
-        <<-EOQ
+        <<-SQL
         SELECT #{@row_spec}
         FROM crosstab('#{base_sql.gsub("'", "''")}',
         '#{@col_sql.gsub("'", "''")}') AS
         (#{@coldef_spec})
-        EOQ
+        SQL
       end
 
       def set_grouping_sequence
