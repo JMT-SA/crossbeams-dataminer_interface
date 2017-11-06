@@ -44,7 +44,7 @@ module Crossbeams
 
       attr_reader :path, :report_lookup
 
-      def make_list(from_cache)
+      def make_list(from_cache = false)
         @report_lookup = {}
         if from_cache
           @report_lookup = YAML.load_file(File.join(path, '.dm_report_list.yml'))
