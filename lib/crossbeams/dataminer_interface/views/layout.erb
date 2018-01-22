@@ -6,26 +6,10 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width", initial-scale=1 /> <!-- IMPORTANT FOR MEDIA QUERIES TO WORK..... -->
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    <script src="/<%= settings.dm_js_location %>/ag-grid-enterprise.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/ag-enterprise-activation.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/jackbox.min.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/sweetalert2.min.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/jquery-3.2.1.min.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/jquery.ui.position.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/jquery.contextMenu.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/a11y-dialog.min.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/Sortable.min.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/crossbeams-local-storage.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/crossbeams-utils.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/crossbeams-layout.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/crossbeams-grid-loader.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/crossbeams-data-miner-params.js" type="text/javascript"></script>
-    <script src="/<%= settings.dm_js_location %>/selectr.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="/<%= settings.dm_css_location %>/jackbox.css">
+    <link rel="stylesheet" href="/<%= settings.dm_css_location %>/font-awesome.min.css">
     <link rel="stylesheet" href="/<%= settings.dm_css_location %>/tachyons.min.css">
     <link rel="stylesheet" href="/<%= settings.dm_css_location %>/sweetalert2.min.css">
-    <!--link rel="stylesheet" href="/<%= settings.dm_css_location %>/crossbeams-layout.css"-->
-    <link rel="stylesheet" href="/<%= settings.dm_css_location %>/font-awesome.min.css">
     <link rel="stylesheet" href="/<%= settings.dm_css_location %>/jquery.contextMenu.css">
     <link rel="stylesheet" href="/<%= settings.dm_css_location %>/selectr.min.css">
     <%= assets(:css) %>
@@ -58,7 +42,7 @@
       }
     </style>
 </head>
-<body>
+<body class="site">
   <% if env['crossbeams.banner'].nil? %>
     <a href="/" style="font-size:1.8em;font-weight:bold;color:green;text-decoration:none;margin-left:1em;line-height:2.5em;">Data Miner</a>
   <% else %>
@@ -68,9 +52,10 @@
     <span class="ml3"> <%= current_user[:user_name] %> <%= current_user[:department_name].nil? ? '' : "(#{current_user[:department_name]})" %></span>
   <% end %>
   <%= partial('menu') %>
-  <div id="content">
-    <%= yield %>
-  </div>
+
+    <div id="container" class="container">
+      <%= yield %>
+    </div>
 
     <div class="dialog" aria-hidden="true" id="crossbeams-popup-dialog-level1">
       <div class="dialog-overlay" tabindex="-1"></div> <!-- data-a11y-dialog-hide></div> -->
@@ -94,6 +79,22 @@
       </div>
     </div>
 
+  <script src="/<%= settings.dm_js_location %>/lodash.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/jquery-3.2.1.min.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/jquery.ui.position.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/ag-grid-enterprise.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/ag-enterprise-activation.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/jackbox.min.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/jquery.contextMenu.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/sweetalert2.min.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/Sortable.min.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/crossbeams-local-storage.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/crossbeams-utils.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/crossbeams-layout.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/crossbeams-grid-loader.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/crossbeams-data-miner-params.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/selectr.min.js" type="text/javascript"></script>
+  <script src="/<%= settings.dm_js_location %>/a11y-dialog-cbeam.js" type="text/javascript"></script>
   <script>
     let crossbeamsDialogLevel1;
     let crossbeamsDialogLevel2;
@@ -103,31 +104,6 @@
       const dialogEl2 = document.getElementById('crossbeams-popup-dialog-level2');
       crossbeamsDialogLevel2 = new window.A11yDialog(dialogEl2);
     });
-
-    // Override the dialog keypress handler so that we can
-    // trap the ESC key on grid searches.
-    A11yDialog.prototype._bindKeypress = function (event) {
-      // if (this.shown && event.which === 27) { // ESCAPE_KEY) {
-      //   console.log('trapped esc', this);
-      //   if (event.target.dataset && event.target.dataset.gridSearch) {
-      //     return;
-      //   }
-      // }
-      // TODO: Handle ESC outside of the prototype so that we can close
-      //       only the topmost dialog. Currently the ESC goes to all
-      //       dialogs and so the lower one thinks it is no longer showing.
-      // FOR NOW, do not close on ESC...
-      // if (this.shown && event.which === 27) { // ESCAPE_KEY) {
-      //   event.preventDefault();
-      //   this.hide();
-      // }
-
-      // If the dialog is shown and the TAB key is being pressed, make sure the
-      // focus stays trapped within the dialog element
-      if (this.shown && event.which === 9) { // TAB_KEY) {
-        trapTabKey(this.node, event);
-      }
-    }
 
     document.addEventListener('DOMContentLoaded', () => {
       const sortable = Array.from(document.getElementsByTagName('input')).filter(a => a.dataset && a.dataset.sortablePrefix);
@@ -144,6 +120,7 @@
       Jackbox.error('<%= flash[:error].tr("'", "`") %>', { time: 20 });
     <% end %>
   </script>
+  <%= content_for :late_javascript %>
 
 </body>
 </html>

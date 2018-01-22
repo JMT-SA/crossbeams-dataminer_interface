@@ -14,6 +14,7 @@
   <div id="grd1" style="height: 100%;" class="ag-blue"></div>
 </div>
 
+ <% content_for :late_javascript do %>
 <script>
 
 (function() {
@@ -132,3 +133,4 @@
       //loadGrid(grid, gridOptions);
   }).call(this);
 </script>
+<% end %>

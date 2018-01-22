@@ -8,15 +8,15 @@
     <div class="crossbeams-col">
       <div class="crossbeams-field">
         <label for="filename">File name</label>
-        <input type='text' id="filename" name='filename' placeholder='filename.yml' value='<%= @filename %>' required />
+        <input type='text' id="filename" name='filename' class='cbl-input' placeholder='filename.yml' value='<%= @filename %>' required />
       </div>
       <div class="crossbeams-field">
         <label for="caption">Caption</label>
-        <input type='text' id="caption" name='caption' placeholder='Caption' value='<%= @caption %>' required size="80"/>
+        <input type='text' id="caption" name='caption' class='cbl-input' placeholder='Caption' value='<%= @caption %>' required size="80"/>
       </div>
       <div class="crossbeams-field">
         <label for="sql">SQL</label>
-        <textarea name=sql rows=20 cols=120 required ><%= @sql %></textarea>
+        <textarea name='sql' class='cbl-input' rows='20' cols='120' required ><%= @sql %></textarea>
       </div>
       <div class="crossbeams-actions">
         <input type="submit" class="white bg-green br2 dim pa3 ba b--near-white">

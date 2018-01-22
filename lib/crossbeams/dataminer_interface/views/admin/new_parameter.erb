@@ -8,44 +8,44 @@
     <div class="crossbeams-col">
       <div class="crossbeams-field">
         <label for="ns_col">Namespaced column</label>
-        <select id="ns_col" name="column">
+        <select id="ns_col" name="column" class="cbl-input">
           <%= select_options(nil, @cols) %>
         </select>
       </div>
       <div class="crossbeams-field">
         <label for="non_sel_col">Non-select column</label>
-        <select id="non_sel_col" name="table">
+        <select id="non_sel_col" name="table" class="cbl-input">
           <%= select_options(nil, @tables) %>
         </select>
         .
-        <input type="text" name="field" placeholder='Field name' ></input>
+        <input type="text" name="field" class="cbl-input" placeholder='Field name' ></input>
       </div>
       <div class="crossbeams-field">
         <label for="caption">Caption</label>
-        <input type='text' id="caption" name='caption' placeholder='Caption' required size="80"/>
+        <input type='text' id="caption" name='caption' class="cbl-input" placeholder='Caption' required size="80"/>
       </div>
       <div class="crossbeams-field">
         <label for="data_type">Data type</label>
-        <select id="data_type" name="data_type">
+        <select id="data_type" name="data_type" class="cbl-input">
           <%= select_options(nil, [['String', 'string'], ['Integer', 'integer'], ['Number', 'number'], ['Date', 'date'], ['Date-Time', 'datetime'], ['Boolean', 'boolean']], false) %>
         </select>
       </div>
       <div class="crossbeams-field">
         <label for="control_type">Control type</label>
-        <select name="control_type">
+        <select name="control_type" class="cbl-input">
           <%= select_options(nil, [['Text box', 'text'], ['Dropdown list', 'list'], ['Date range', 'daterange']], false) %>
         </select>
       </div>
       <div class="crossbeams-field">
         <label for="list_def">List definition</label>
-        <input type='text' id="list_def" name='list_def' placeholder='List definition' size="80"/>
+        <input type='text' id="list_def" name='list_def' class="cbl-input" placeholder='List definition' size="80"/>
       </div>
       <div class="crossbeams-field">
         <label for="default_value">Default value</label>
-        <input type='text' id="default_value" name='default_value' placeholder='Default value' />
+        <input type='text' id="default_value" name='default_value' class="cbl-input" placeholder='Default value' />
       </div>
       <div class="actions pure-controls">
-        <input type="submit" class="pure-button pure-button-primary" value="Add parameter" />
+        <input type="submit" class="white bg-green br2 dim pa3 ba b--near-white" value="Add parameter" />
       </div>
     </div>
   </div>

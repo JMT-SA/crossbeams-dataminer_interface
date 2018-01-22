@@ -73,12 +73,13 @@
   </div>
 </form>
 
-<script>
-  crossbeamsDataMinerParams.init('rp_form', '<%=@rpt_id%>', <%= make_query_param_json(@qps) %>);
-  <% if @load_params %>
-    crossbeamsDataMinerParams.loadCurrentParams();
-  <% else %>
-    crossbeamsDataMinerParams.buildReloadButton();
-  <% end %>
-</script>
-
+<% content_for :late_javascript do %>
+  <script>
+    crossbeamsDataMinerParams.init('rp_form', '<%=@rpt_id%>', <%= make_query_param_json(@qps) %>);
+    <% if @load_params %>
+      crossbeamsDataMinerParams.loadCurrentParams();
+    <% else %>
+      crossbeamsDataMinerParams.buildReloadButton();
+    <% end %>
+  </script>
+<% end %>

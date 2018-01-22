@@ -1,3 +1,6 @@
+# rubocop:disable Metrics/ClassLength
+# rubocop:disable Metrics/BlockLength
+
 module Crossbeams
   module DataminerInterface
     class App < Roda
@@ -10,17 +13,15 @@ module Crossbeams
         block.call(middleware) if block
       end
 
-
       plugin :render, views: File.join(File.dirname(__FILE__), 'views')
       plugin :partials
       plugin :public
       plugin :view_options
-      plugin :content_for, :append=>true
+      plugin :content_for, append: true
       plugin :indifferent_params
-      plugin :assets, css: 'style.scss'#, js: 'behave.js'
+      plugin :assets, css: 'style.scss' # , js: 'behave.js'
       plugin :json_parser
       plugin :flash
-
 
       route do |r|
         r.on 'dataminer' do
@@ -34,21 +35,20 @@ module Crossbeams
             rpt_list = DmReportLister.new(settings.dm_reports_location).get_report_list(persist: true)
             link     = "'/#{settings.url_prefix}report/'+data.id+'|run'"
 
-            col_defs = [{headerName: '',
-                        width: 60,
-                        suppressMenu: true,   suppressSorting: true,   suppressMovable: true,
-                        suppressFilter: true, enableRowGroup: false,   enablePivot: false,
-                        enableValue: false,   suppressCsvExport: true, suppressToolPanel: true,
-                        valueGetter: link,
-                        colId: "edit_link",
-                        cellRenderer: 'crossbeamsGridFormatters.hrefSimpleFormatter' },
-                        {headerName: 'Report caption', field: 'caption', width: 300},
-                        {headerName: 'File name', field: 'file', width: 600},
-                        {headerName: 'Crosstab?', field: 'crosstab',
-                         cellRenderer: 'crossbeamsGridFormatters.booleanFormatter',
-                         cellClass:    'grid-boolean-column',
-                         width:        100}
-                       ]
+            col_defs = [{ headerName: '',
+                          width: 60,
+                          suppressMenu: true,   suppressSorting: true,   suppressMovable: true,
+                          suppressFilter: true, enableRowGroup: false,   enablePivot: false,
+                          enableValue: false,   suppressCsvExport: true, suppressToolPanel: true,
+                          valueGetter: link,
+                          colId: 'edit_link',
+                          cellRenderer: 'crossbeamsGridFormatters.hrefSimpleFormatter' },
+                        { headerName: 'Report caption', field: 'caption', width: 300 },
+                        { headerName: 'File name', field: 'file', width: 600 },
+                        { headerName: 'Crosstab?', field: 'crosstab',
+                          cellRenderer: 'crossbeamsGridFormatters.booleanFormatter',
+                          cellClass:    'grid-boolean-column',
+                          width:        100 }]
             {
               columnDefs: col_defs,
               rowDefs:    rpt_list.sort_by { |rpt| rpt[:caption] }
@@ -80,17 +80,17 @@ module Crossbeams
                 setup_report_with_parameters(@rpt, params, crosstab_hash)
 
                 @col_defs = []
-                @rpt.ordered_columns.each do | col|
-                  hs                  = {headerName: col.caption, field: col.name, hide: col.hide, headerTooltip: col.caption}
+                @rpt.ordered_columns.each do |col|
+                  hs                  = { headerName: col.caption, field: col.name, hide: col.hide, headerTooltip: col.caption }
                   hs[:width]          = col.width unless col.width.nil?
-                  hs[:enableValue]    = true if [:integer, :number].include?(col.data_type)
+                  hs[:enableValue]    = true if %i[integer number].include?(col.data_type)
                   hs[:enableRowGroup] = true unless hs[:enableValue] && !col.groupable
                   hs[:enablePivot]    = true unless hs[:enableValue] && !col.groupable
                   hs[:rowGroupIndex]  = col.group_by_seq if col.group_by_seq
                   hs[:cellRenderer]   = 'group' if col.group_by_seq
                   hs[:cellRendererParams] = { restrictToOneGroup: true } if col.group_by_seq
-                  hs[:aggFunc]        = 'sum' if col.group_sum
-                  if [:integer, :number].include?(col.data_type)
+                  hs[:aggFunc]            = 'sum' if col.group_sum
+                  if %i[integer number].include?(col.data_type)
                     hs[:cellClass] = 'grid-number-column'
                     hs[:width]     = 100 if col.width.nil? && col.data_type == :integer
                     hs[:width]     = 120 if col.width.nil? && col.data_type == :number
@@ -114,11 +114,10 @@ module Crossbeams
 
                 begin
                   # Use module for BigDecimal change? - register_extension...?
-                  @row_defs = db_connection[@rpt.runnable_sql].to_a.map {|m| m.keys.each {|k| if m[k].is_a?(BigDecimal) then m[k] = m[k].to_f; end }; m; }
+                  @row_defs = db_connection[@rpt.runnable_sql].to_a.map { |m| m.keys.each { |k| if m[k].is_a?(BigDecimal) then m[k] = m[k].to_f; end }; m; }
 
                   @return_action = "/#{settings.url_prefix}report/#{id}"
                   view('report/display')
-
                 rescue Sequel::DatabaseError => e
                   view(inline: <<-HTML)
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
@@ -143,21 +142,21 @@ module Crossbeams
                 setup_report_with_parameters(@rpt, params, crosstab_hash)
 
                 begin
-                  xls_possible_types = {string: :string, integer: :integer, date: :string,
-                                        datetime: :time, time: :time, boolean: :boolean, number: :float}
+                  xls_possible_types = { string: :string, integer: :integer, date: :string,
+                                         datetime: :time, time: :time, boolean: :boolean, number: :float }
                   heads = []
                   fields = []
                   xls_types = []
                   x_styles = []
-                  Axlsx::Package.new do | p |
-                    p.workbook do | wb |
+                  Axlsx::Package.new do |p|
+                    p.workbook do |wb|
                       styles     = wb.styles
-                      tbl_header = styles.add_style :b => true, :font_name => 'arial', :alignment => {:horizontal => :center}
+                      tbl_header = styles.add_style b: true, font_name: 'arial', alignment: { horizontal: :center }
                       # red_negative = styles.add_style :num_fmt => 8
-                      delim4 = styles.add_style(:format_code=>"#,##0.0000;[Red]-#,##0.0000")
-                      delim2 = styles.add_style(:format_code=>"#,##0.00;[Red]-#,##0.00")
-                      and_styles = {delimited_1000_4: delim4, delimited_1000: delim2}
-                      @rpt.ordered_columns.each do | col|
+                      delim4 = styles.add_style(format_code: '#,##0.0000;[Red]-#,##0.0000')
+                      delim2 = styles.add_style(format_code: '#,##0.00;[Red]-#,##0.00')
+                      and_styles = { delimited_1000_4: delim4, delimited_1000: delim2 }
+                      @rpt.ordered_columns.each do |col|
                         xls_types << xls_possible_types[col.data_type] || :string # BOOLEAN == 0,1 ... need to change this to Y/N...or use format TRUE|FALSE...
                         heads << col.caption
                         fields << col.name
@@ -165,19 +164,18 @@ module Crossbeams
                         x_styles << and_styles[col.format]
                       end
                       puts x_styles.inspect
-                      wb.add_worksheet do | sheet |
-                        sheet.add_row heads, :style => tbl_header
-                        #Crossbeams::DataminerInterface::DB[@rpt.runnable_sql].each do |row|
+                      wb.add_worksheet do |sheet|
+                        sheet.add_row heads, style: tbl_header
+                        # Crossbeams::DataminerInterface::DB[@rpt.runnable_sql].each do |row|
                         db_connection[@rpt.runnable_sql].each do |row|
-                          sheet.add_row(fields.map {|f| v = row[f.to_sym]; v.is_a?(BigDecimal) ? v.to_f : v }, :types => xls_types, :style => x_styles)
+                          sheet.add_row(fields.map { |f| v = row[f.to_sym]; v.is_a?(BigDecimal) ? v.to_f : v }, types: xls_types, style: x_styles)
                         end
                       end
                     end
-                    response.headers['content_type'] = "application/vnd.ms-excel"
+                    response.headers['content_type'] = 'application/vnd.ms-excel'
                     response.headers['Content-Disposition'] = "attachment; filename=\"#{@rpt.caption.strip.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') + '.xls'}\""
                     response.write(p.to_stream.read) # NOTE: could this streaming to start downloading quicker?
                   end
-
                 rescue Sequel::DatabaseError => e
                   erb(<<-HTML)
                   <p style='color:red;'>There is a problem with the SQL definition of this report:</p>
@@ -200,8 +198,8 @@ module Crossbeams
               @rpt_list = DmReportLister.new(rep_loc).get_report_list(from_cache: true)
               @menu     = ''
               view('admin/index')
-            # renderer = Renderer::Grid.new('rpt_grid', '/dataminer/admin/grid/', 'Report listing')
-            # view(inline: renderer.render)
+              # renderer = Renderer::Grid.new('rpt_grid', '/dataminer/admin/grid/', 'Report listing')
+              # view(inline: renderer.render)
             end
 
             r.on 'reports' do
@@ -215,10 +213,10 @@ module Crossbeams
             end
 
             r.on 'new' do
-              @filename=''
-              @caption=''
-              @sql=''
-              @err=''
+              @filename = ''
+              @caption = ''
+              @sql = ''
+              @err = ''
               view('admin/new')
             end
 
@@ -270,7 +268,7 @@ module Crossbeams
                 unless params[:file] &&
                        (@tmpfile = params[:file][:tempfile]) &&
                        (@name = params[:file][:filename])
-                  r.redirect("/#{settings.url_prefix}admin/") #return "No file selected"
+                  r.redirect("/#{settings.url_prefix}admin/") # return "No file selected"
                 end
                 @yml  = @tmpfile.read # Store tmpfile so it's available for save? ... currently hiding yml in the form...
                 @hash = YAML.load(@yml)
@@ -304,52 +302,51 @@ module Crossbeams
 
                 @filename = File.basename(DmReportLister.new(rep_loc).get_file_name_by_id(id))
 
-                @col_defs = [{headerName: 'Column Name', field: 'name', pinned: 'left'},
-                             {headerName: 'Seq', field: 'sequence_no', cellClass: 'grid-number-column', pinned: 'left', width: 80 }, # to be changed in group...
-                             {headerName: 'Caption', field: 'caption', editable: true, pinned: 'left'},
-                             {headerName: 'Namespaced Name', field: 'namespaced_name'},
-                             {headerName: 'Data type', field: 'data_type', editable: true, cellEditor: 'select', cellEditorParams: {
-                               values: ['string', 'boolean', 'integer', 'number', 'date', 'datetime']
-                             }},
-                             {headerName: 'Width', field: 'width', cellClass: 'grid-number-column', editable: true, cellEditor: 'NumericCellEditor'}, # editable NUM ONLY...
-                             {headerName: 'Format', field: 'format', editable: true, cellEditor: 'select', cellEditorParams: {
+                @col_defs = [{ headerName: 'Column Name', field: 'name', pinned: 'left' },
+                             { headerName: 'Seq', field: 'sequence_no', cellClass: 'grid-number-column', pinned: 'left', width: 80 }, # to be changed in group...
+                             { headerName: 'Caption', field: 'caption', editable: true, pinned: 'left' },
+                             { headerName: 'Namespaced Name', field: 'namespaced_name' },
+                             { headerName: 'Data type', field: 'data_type', editable: true, cellEditor: 'select', cellEditorParams: {
+                               values: %w[string boolean integer number date datetime]
+                             } },
+                             { headerName: 'Width', field: 'width', cellClass: 'grid-number-column', editable: true, cellEditor: 'NumericCellEditor' }, # editable NUM ONLY...
+                             { headerName: 'Format', field: 'format', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: ['', 'delimited_1000', 'delimited_1000_4']
-                             }},
-                             {headerName: 'Hide?', field: 'hide', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Hide?', field: 'hide', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }},
-                             {headerName: 'Can group by?', field: 'groupable', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Can group by?', field: 'groupable', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }},
-                             {headerName: 'Group Seq', field: 'group_by_seq', cellClass: 'grid-number-column', headerTooltip: 'If the grid opens grouped, this is the grouping level', editable: true, cellEditor: 'NumericCellEditor'},
-                             {headerName: 'Sum?', field: 'group_sum', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Group Seq', field: 'group_by_seq', cellClass: 'grid-number-column', headerTooltip: 'If the grid opens grouped, this is the grouping level', editable: true, cellEditor: 'NumericCellEditor' },
+                             { headerName: 'Sum?', field: 'group_sum', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }},
-                             {headerName: 'Avg?', field: 'group_avg', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Avg?', field: 'group_avg', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }},
-                             {headerName: 'Min?', field: 'group_min', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Min?', field: 'group_min', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }},
-                             {headerName: 'Max?', field: 'group_max', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
+                             } },
+                             { headerName: 'Max?', field: 'group_max', cellRenderer: 'crossbeamsGridFormatters.booleanFormatter', cellClass: 'grid-boolean-column', editable: true, cellEditor: 'select', cellEditorParams: {
                                values: [true, false]
-                             }}
-                ]
-                @row_defs = @rpt.ordered_columns.map {|c| c.to_hash }
+                             } }]
+                @row_defs = @rpt.ordered_columns.map(&:to_hash)
 
                 @col_defs_params = [
-                  {headerName: '', width: 60, suppressMenu: true, suppressSorting: true, suppressMovable: true, suppressFilter: true,
-                   enableRowGroup: false, enablePivot: false, enableValue: false, suppressCsvExport: true,
-                   valueGetter: "'/#{settings.url_prefix}admin/#{id}/parameter/delete/' + data.column + '|delete|Are you sure?|delete'", colId: 'delete_link', cellRenderer: 'crossbeamsGridFormatters.hrefPromptFormatter'},
+                  { headerName: '', width: 60, suppressMenu: true, suppressSorting: true, suppressMovable: true, suppressFilter: true,
+                    enableRowGroup: false, enablePivot: false, enableValue: false, suppressCsvExport: true,
+                    valueGetter: "'/#{settings.url_prefix}admin/#{id}/parameter/delete/' + data.column + '|delete|Are you sure?|delete'", colId: 'delete_link', cellRenderer: 'crossbeamsGridFormatters.hrefPromptFormatter' },
 
-                  {headerName: 'Column', field: 'column'},
-                  {headerName: 'Caption', field: 'caption'},
-                  {headerName: 'Data type', field: 'data_type'},
-                  {headerName: 'Control type', field: 'control_type'},
-                  {headerName: 'List definition', field: 'list_def'},
-                  {headerName: 'UI priority', field: 'ui_priority'},
-                  {headerName: 'Default value', field: 'default_value'}#,
-                  #{headerName: 'List values', field: 'list_values'}
+                  { headerName: 'Column', field: 'column' },
+                  { headerName: 'Caption', field: 'caption' },
+                  { headerName: 'Data type', field: 'data_type' },
+                  { headerName: 'Control type', field: 'control_type' },
+                  { headerName: 'List definition', field: 'list_def' },
+                  { headerName: 'UI priority', field: 'ui_priority' },
+                  { headerName: 'Default value', field: 'default_value' } # ,
+                  # { headerName: 'List values', field: 'list_values' }
                 ]
 
                 @row_defs_params = []
@@ -362,7 +359,7 @@ module Crossbeams
 
               r.on 'reorder_columns' do
                 @report = lookup_admin_report(id)
-                cols    = @report.ordered_columns.map { | column| ["#{column.name} (#{column.caption})", column.name] }
+                cols    = @report.ordered_columns.map { |column| ["#{column.name} (#{column.caption})", column.name] }
                 obj     = OpenStruct.new
                 obj.id  = id
                 rules   = { fields: { id: { renderer: :hidden } } }
@@ -387,8 +384,7 @@ module Crossbeams
                 rules   = { fields: { id: { renderer: :hidden },
                                       sql: { renderer: :textarea,
                                              cols: 60,
-                                             rows: 25 }
-                                    },
+                                             rows: 25 } },
                             name: 'report'.freeze }
                 layout  = Crossbeams::Layout::Page.build(rules) do |page|
                   page.form_object obj
@@ -440,7 +436,7 @@ module Crossbeams
                   if File.basename(filename) != params[:filename]
                     puts "new name: #{params[:filename]} for #{File.basename(filename)}"
                   else
-                    puts "No change to file name"
+                    puts 'No change to file name'
                   end
                   @rpt.caption = params[:caption]
                   @rpt.limit = params[:limit].empty? ? nil : params[:limit].to_i
@@ -454,10 +450,10 @@ module Crossbeams
                 end
               end
 
-      #TODO:
-      #      - Make JS scoped by crossbeams.
-      #      - split editors into another JS file
-      #      - ditto formatters etc...
+              # TODO: following:
+              #      - Make JS scoped by crossbeams.
+              #      - split editors into another JS file
+              #      - ditto formatters etc...
               r.on 'save_param_grid_col' do # JSON
                 @rpt = lookup_admin_report(id)
                 col = @rpt.columns[params[:key_val]]
@@ -467,7 +463,7 @@ module Crossbeams
                 # Should validate - width numeric, range... caption cannot be blank...
                 # group_sum, avg etc should act as radio grps... --> Create service class to do validation.
                 # FIXME: width cannot be 0...
-                if ['format', 'data_type'].include?(attrib) && !value.nil?
+                if %w[format data_type].include?(attrib) && !value.nil?
                   col.send("#{attrib}=", value.to_sym)
                 else
                   value = value.to_i if attrib == 'width' && !value.nil?
@@ -488,16 +484,16 @@ module Crossbeams
                 end
 
                 if value.nil? && attrib == 'caption' # Cannot be nil...
-                  {status: 'error', message: "Caption for #{params[:key_val]} cannot be blank"}.to_json
+                  { status: 'error', message: "Caption for #{params[:key_val]} cannot be blank" }.to_json
                 else
                   filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                   yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                   @rpt.save(yp)
                   if send_changes
-                    {status: 'ok', message: "Changed #{attrib} for #{params[:key_val]}",
-                     changedFields: {group_avg: false, group_min: false, group_max: false, group_none: 'A TEST'} }.to_json
+                    { status: 'ok', message: "Changed #{attrib} for #{params[:key_val]}",
+                      changedFields: { group_avg: false, group_min: false, group_max: false, group_none: 'A TEST' } }.to_json
                   else
-                    {status: 'ok', message: "Changed #{attrib} for #{params[:key_val]}"}.to_json
+                    { status: 'ok', message: "Changed #{attrib} for #{params[:key_val]}" }.to_json
                   end
                 end
               end
@@ -505,7 +501,7 @@ module Crossbeams
               r.on 'parameter' do
                 r.on 'new' do
                   @rpt = lookup_admin_report(id)
-                  @cols = @rpt.ordered_columns.map { |c| c.namespaced_name }.compact
+                  @cols = @rpt.ordered_columns.map(&:namespaced_name).compact
                   @tables = @rpt.tables
                   @id = id
                   view('admin/new_parameter')
@@ -520,14 +516,14 @@ module Crossbeams
                     if col_name.nil? || col_name.empty?
                       col_name = "#{params[:table]}.#{params[:field]}"
                     end
-                    opts = {:control_type => params[:control_type].to_sym,
-                            :data_type => params[:data_type].to_sym, caption: params[:caption]}
+                    opts = { control_type: params[:control_type].to_sym,
+                             data_type: params[:data_type].to_sym, caption: params[:caption] }
                     unless params[:list_def].nil? || params[:list_def].empty?
-                      if params[:list_def].start_with?('[') # Array
-                        opts[:list_def] = eval(params[:list_def]) # TODO: unpack the string into an array... (Job for the gem?)
-                      else
-                        opts[:list_def] = params[:list_def]
-                      end
+                      opts[:list_def] = if params[:list_def].start_with?('[') # Array
+                                          eval(params[:list_def]) # TODO: unpack the string into an array... (Job for the gem?)
+                                        else
+                                          params[:list_def]
+                                        end
                     end
 
                     param = Crossbeams::Dataminer::QueryParameterDefinition.new(col_name, opts)
@@ -537,7 +533,7 @@ module Crossbeams
                     yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                     @rpt.save(yp)
 
-                    flash[:notice] = "Parameter has been added."
+                    flash[:notice] = 'Parameter has been added.'
                     r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
                   end
                 end
@@ -549,16 +545,16 @@ module Crossbeams
                       @rpt = lookup_admin_report(id)
                       puts ">>> #{param_id}"
                       # puts @rpt.query_parameter_definitions.length
-                      puts @rpt.query_parameter_definitions.map { |p| p.column }.sort.join('; ')
+                      puts @rpt.query_parameter_definitions.map(&:column).sort.join('; ')
                       @rpt.query_parameter_definitions.delete_if { |p| p.column == param_id }
                       # puts @rpt.query_parameter_definitions.length
                       filename = DmReportLister.new(rep_loc).get_file_name_by_id(id)
                       # puts filename
                       yp = Crossbeams::Dataminer::YamlPersistor.new(filename)
                       @rpt.save(yp)
-                      #puts @rpt.query_parameter_definitions.map { |p| p.column }.sort.join('; ')
-                      #params.inspect
-                      flash[:notice] = "Parameter has been deleted."
+                      # puts @rpt.query_parameter_definitions.map { |p| p.column }.sort.join('; ')
+                      # params.inspect
+                      flash[:notice] = 'Parameter has been deleted.'
                       r.redirect("/#{settings.url_prefix}admin/#{id}/edit/")
                     end
                   end

@@ -6,21 +6,21 @@
 <form action='/<%= the_url_prefix %>admin/<%= @id%>/save/' method=post class="crossbeams-form">
   <div class="crossbeams-row">
     <div class="crossbeams-col">
-      <div class="crossbeams-field pure-control-group">
+      <div class="crossbeams-field">
         <label for="filename">File name</label>
-        <input type='text' id="filename" name='filename' placeholder='filename.yml' value='<%= @filename %>' required readonly="readonly" />
+        <input type='text' id="filename" name='filename' class='cbl-input' placeholder='filename.yml' value='<%= @filename %>' required readonly="readonly" />
       </div>
-      <div class="crossbeams-field pure-control-group">
+      <div class="crossbeams-field">
         <label for="caption">Caption</label>
-        <input type='text' id="caption" name='caption' placeholder='Caption' value='<%= @rpt.caption %>' required size="80"/>
+        <input type='text' id="caption" name='caption' class='cbl-input' placeholder='Caption' value='<%= @rpt.caption %>' required size="80"/>
       </div>
-      <div class="crossbeams-field pure-control-group">
+      <div class="crossbeams-field">
         <label for="limit">Limit</label>
-        <input type='number' id="limit" name='limit' placeholder='Limit' value='<%= @rpt.limit %>' size="80"/>
+        <input type='number' id="limit" name='limit' class='cbl-input' placeholder='Limit' value='<%= @rpt.limit %>' size="80"/>
       </div>
-      <div class="crossbeams-field pure-control-group">
+      <div class="crossbeams-field">
         <label for="offset">Offset</label>
-        <input type='number' id="offset" name='offset' placeholder='Offset' value='<%= @rpt.offset %>' size="80"/>
+        <input type='number' id="offset" name='offset' class='cbl-input' placeholder='Offset' value='<%= @rpt.offset %>' size="80"/>
       </div>
       <div class="crossbeams-actions">
         <input type="submit" class="white bg-green br2 dim pa3 ba b--near-white" value="Update report header" />
@@ -38,44 +38,20 @@
 <hr>
 
 <div style="height:20em">
-  <div class="grid-head">
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('grd1', '<%= @rpt.caption.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') %> columns.csv')"><i class="fa fa-file"></i> Export to CSV</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('grd1')"><i class="fa fa-cog"></i> Tool panel</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <input onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="grd1"/>
-    </label>
-    <span class="grid-caption">
-      Columns
-    </span>
-  </div>
+  <%= Crossbeams::Layout::Renderer::Grid.header('grd1', 'Columns') %>
   <div id="grd1" style="height: 100%;" class="ag-blue"></div>
 </div>
 
 <p style="margin-top:5em;"><a href='/<%= the_url_prefix %>admin/<%= @id %>/parameter/new/' class="white bg-blue br2 dim pa3 ba b--near-white"><i class="fa fa-plus"></i> Add a parameter</a><p>
+
 <div style="height:20em">
-  <div class="grid-head">
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.csvExport('grd2', '<%= @rpt.caption.gsub(/[\/:*?"\\<>\|\r\n]/i, '-') %> parameters.csv')"><i class="fa fa-file"></i> Export to CSV</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <button class="pure-button" onclick="crossbeamsGridEvents.toggleToolPanel('grd2')"><i class="fa fa-cog"></i> Tool panel</button>
-    </label>
-    <label style="margin-left: 20px;">
-      <input onkeyup="crossbeamsGridEvents.quickSearch(event)" placeholder='Search...' data-grid-id="grd2"/>
-    </label>
-    <span class="grid-caption">
-      Parameters
-    </span>
-  </div>
+  <%= Crossbeams::Layout::Renderer::Grid.header('grd2', 'Parameters') %>
   <div id="grd2" style="height: 100%;" class="ag-blue"></div>
 </div>
 <p style="height:2em">
 </p>
 
+ <% content_for :late_javascript do %>
 <script>
 
 (function() {
@@ -243,3 +219,4 @@
       //loadGrid(grid, gridOptions);
   }).call(this);
 </script>
+<% end %>
